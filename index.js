@@ -9,6 +9,11 @@ let rooms = 0;
 
 app.use(express.static('.'));
 
+//routes
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.get('/tic', (req, res) => {
     res.sendFile(path.join(__dirname, 'tictactoe.html'));
 });
@@ -17,6 +22,8 @@ app.get('/crazy', (req, res) => {
     res.sendFile(path.join(__dirname, 'crazy.html'));
 });
 
+
+//socket connections
 io.on('connection', (socket) => {
 
     // Create a new game room and notify the creator of game.
