@@ -9,8 +9,12 @@ let rooms = 0;
 
 app.use(express.static('.'));
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'game.html'));
+app.get('/tic', (req, res) => {
+    res.sendFile(path.join(__dirname, 'tictactoe.html'));
+});
+
+app.get('/crazy', (req, res) => {
+    res.sendFile(path.join(__dirname, 'crazy.html'));
 });
 
 io.on('connection', (socket) => {
