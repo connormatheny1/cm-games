@@ -3,8 +3,8 @@
     let game;
     let deck;
   
-    //const socket = io.connect('https://cm-games.herokuapp.com/');
-    const socket = io.connect('http://localhost:5000');
+    const socket = io.connect('https://cm-games.herokuapp.com/');
+    //const socket = io.connect('http://localhost:5000');
 
     class Deck {
         constructor(players){
