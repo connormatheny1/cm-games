@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "nodemon index.js",
+    "heroku-postbuild": "cd client && npm install && npm run build"
   },
+  "proxy": "http://localhost:5000",
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -14,6 +16,7 @@
     "eslint-plugin-import": "^2.20.0",
     "express": "^4.17.1",
     "jquery": "^3.4.1",
+    "nodemon": "^2.0.2",
     "skeleton": "^0.1.2",
     "skeleton-css": "^2.0.4",
     "socket.io": "^2.3.0"

@@ -1,18 +1,61 @@
 (function init() {
-    const P1 = 'X';
-    const P2 = 'O';
     let player;
     let game;
+    let deck;
   
     //const socket = io.connect('https://cm-games.herokuapp.com/');
     const socket = io.connect('http://localhost:5000');
+
+    class Deck {
+        constructor(players){
+            this.players = players;
+            this.total = 0;
+            this.colors = ['red', 'green', 'yellow', 'blue'];
+            this.deck = []
+        }
+
+        create(){
+            for(let i = 0; i < this.colors.length; i++){
+                for(let j = 0; j < 13; j++){
+                    let card = {
+                        color: this.colors[i],
+                        val: j+1
+                    }
+                    this.deck.push(card);
+                }
+            }
+            this.total = this.deck.length;
+        }
+
+        shuffle(){
+            console.log(this.deck)
+            let shuffled = [];
+            let num = 52;
+            while(this.deck.length > 0){
+                let rand = Math.floor(Math.random() * (Math.floor(this.deck.length) - Math.ceil(0)) + Math.ceil(0));
+                console.log(rand)
+                let randCard = this.deck[rand];
+                console.log(randCard)
+                shuffled.push({
+                    color: this.deck[rand].color,
+                    val: this.deck[rand].val
+                });
+                this.deck.splice(rand, 1);              
+            }
+            return shuffled;
+        }
+
+        deal(players){
+
+        }
+    }
   
     class Player {
-      constructor(name, type) {
+      constructor(name, cards) {
         this.name = name;
-        this.type = type;
         this.currentTurn = true;
         this.playsArr = 0;
+        this.cards = cards;
       }
   
       static get wins() {
@@ -47,6 +90,12 @@
       getCurrentTurn() {
         return this.currentTurn;
       }
+
+      getCards(){
+          return this.cards;
+      }
+
+
     }
   
     // roomId Id of the room in which the game is running on the server.
@@ -60,8 +109,6 @@
       // Create the Game board by attaching event listeners to the buttons.
       createGameBoard() {
         function tileClickHandler() {
-          const row = parseInt(this.id.split('_')[1][0], 10);
-          const col = parseInt(this.id.split('_')[1][1], 10);
           if (!player.getCurrentTurn() || !game) {
             alert('Its not your turn!');
             return;
@@ -81,6 +128,8 @@
   
           game.checkWinner();
         }
+
+
   
         for (let i = 0; i < 3; i++) {
           this.board.push(['', '', '']);
@@ -212,6 +261,41 @@
       socket.emit('joinGame', { name, room: roomID });
       player = new Player(name, P2);
     });
+
+    $('#createDeck').on('click', () => {
+        deck = new Deck(1);
+        deck.create();
+        $('.gameBoard').css('display', 'block');
+        for(let i = 0; i < deck.deck.length; i++){
+            let div = document.createElement('div');
+            div.classList += 'card';
+            let color = document.createElement('p');
+            let value = document.createElement('p');
+            color.textContent = deck.deck[i].color;
+            value.textContent = deck.deck[i].val;
+            div.style.backgroundColor = deck.deck[i].color;
+            div.append(color);
+            div.append(value);
+            $('.table').append(div);
+        }
+    })
+
+    $('#shuffleDeck').on('click', () => {
+        let cards = deck.shuffle();
+        document.querySelector('.table').innerHTML = '';
+        for(let i = 0; i < cards.length; i++){
+            let div = document.createElement('div');
+            div.classList += 'card';
+            let color = document.createElement('p');
+            let value = document.createElement('p');
+            color.textContent = cards[i].color;
+            value.textContent = cards[i].val;
+            div.style.backgroundColor = cards[i].color;
+            div.append(color);
+            div.append(value);
+            $('.table').append(div);
+        }
+    })
   
     // New Game created by current client. Update the UI and create new Game var.
     socket.on('newGame', (data) => {

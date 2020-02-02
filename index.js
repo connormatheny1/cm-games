@@ -1,15 +1,22 @@
 const express = require('express');
 const path = require('path');
-
 const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
-
 let rooms = 0;
 
+
+/**
+ * original app.use, pre react integration
+ */
 app.use(express.static('.'));
 
-//routes
+
+//app.use(express.static(path.join(__dirname, 'client/build')));
+
+/**
+ * Routes
+ */
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -23,7 +30,9 @@ app.get('/crazy', (req, res) => {
 });
 
 
-//socket connections
+/**
+ * Socket connections
+ */
 io.on('connection', (socket) => {
 
     // Create a new game room and notify the creator of game.
