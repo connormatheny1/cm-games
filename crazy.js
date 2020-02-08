@@ -1,10 +1,14 @@
 (function init() {
     let player;
+    let player2;
+    let player3;
     let game;
     let deck;
+    let players = [];
+    let curUser;
   
-    const socket = io.connect('https://cm-games.herokuapp.com/');
-    //const socket = io.connect('http://localhost:5000');
+    //const socket = io.connect('https://cm-games.herokuapp.com/');
+    const socket = io.connect('http://localhost:5000');
 
     class Deck {
         constructor(players){
@@ -51,11 +55,12 @@
     }
   
     class Player {
-      constructor(name, cards) {
+      constructor(name) {
         this.name = name;
         this.currentTurn = true;
         this.playsArr = 0;
-        this.cards = cards;
+        this.cards = [];
+        this.id = 0;
       }
   
       static get wins() {
@@ -128,8 +133,6 @@
   
           game.checkWinner();
         }
-
-
   
         for (let i = 0; i < 3; i++) {
           this.board.push(['', '', '']);
@@ -173,29 +176,6 @@
           room: this.getRoomId(),
         });
       }
-      /**
-       *
-       * To determine a win condition, each square is "tagged" from left
-       * to right, top to bottom, with successive powers of 2.  Each cell
-       * thus represents an individual bit in a 9-bit string, and a
-       * player's squares at any given time can be represented as a
-       * unique 9-bit value. A winner can thus be easily determined by
-       * checking whether the player's current 9 bits have covered any
-       * of the eight "three-in-a-row" combinations.
-       *
-       *     273                 84
-       *        \               /
-       *          1 |   2 |   4  = 7
-       *       -----+-----+-----
-       *          8 |  16 |  32  = 56
-       *       -----+-----+-----
-       *         64 | 128 | 256  = 448
-       *       =================
-       *         73   146   292
-       *
-       *  We have these numbers in the Player.wins array and for the current
-       *  player, we've stored this information in playsArr.
-       */
       checkWinner() {
         const currentPlayerPositions = player.getPlaysArr();
   
@@ -238,8 +218,11 @@
         location.reload();
       }
     }
-  
-    // Create a new game. Emit newGame event.
+
+
+
+
+      // Create a new game. Emit newGame event.
     $('#new').on('click', () => {
       const name = $('#nameNew').val();
       if (!name) {
@@ -249,7 +232,7 @@
       socket.emit('createGame', { name });
       player = new Player(name, P1);
     });
-  
+
     // Join an existing game on the entered roomId. Emit the joinGame event.
     $('#join').on('click', () => {
       const name = $('#nameJoin').val();
@@ -263,51 +246,232 @@
     });
 
     $('#createDeck').on('click', () => {
-        deck = new Deck(1);
-        deck.create();
-        $('.gameBoard').css('display', 'block');
-        for(let i = 0; i < deck.deck.length; i++){
-            let div = document.createElement('div');
-            div.classList += 'card';
-            let color = document.createElement('p');
-            let value = document.createElement('p');
-            color.textContent = deck.deck[i].color;
-            value.textContent = deck.deck[i].val;
-            div.style.backgroundColor = deck.deck[i].color;
-            div.append(color);
-            div.append(value);
-            $('.table').append(div);
-        }
+      deck = new Deck(1);
+      deck.create();
+      $('.gameBoard').css('display', 'block');
+      for(let i = 0; i < deck.deck.length; i++){
+        let div = document.createElement('div');
+        div.classList += 'card';
+        let color = document.createElement('p');
+        let value = document.createElement('p');
+        color.textContent = deck.deck[i].color;
+        value.textContent = deck.deck[i].val;
+        div.style.backgroundColor = deck.deck[i].color;
+        div.append(color);
+        div.append(value);
+        $('.table').append(div);
+      }
+    })
+    
+    $('#shuffleDeck').on('click', () => {
+      let cards = deck.shuffle();
+      document.querySelector('.table').innerHTML = '';
+      for(let i = 0; i < cards.length; i++){
+        let div = document.createElement('div');
+        div.classList += 'card';
+        let color = document.createElement('p');
+        let value = document.createElement('p');
+        color.textContent = cards[i].color;
+        value.textContent = cards[i].val;
+        div.style.backgroundColor = cards[i].color;
+        div.append(color);
+        div.append(value);
+        $('.table').append(div);
+      }
+    });
+
+    /**
+     * Create new room
+     */
+    let roomOwner;
+
+    $('#newRoom').on('click', () => {
+      const roomName = $("#createRoom").val();
+      const username = $("#username").val();
+      
+      if(!roomName){
+        alert('Please enter a room name')
+        return
+      }
+      if(!username){
+        alert('Please enter a username');
+        return;
+      }
+      socket.emit('createRoom', { roomName, username })
+      curUser = username;
+    });
+
+    /**
+     * Join existing room
+     */
+    $("#joinRoom").on("click", () => {
+      const roomName = $("#roomNameJoin").val();
+      const username = $("#usernameJoin").val();
+
+      if(!roomName){
+        alert('Please enter a room name')
+        return
+      }
+      if(!username){
+        alert('Please enter a username');
+        return;
+      }
+      socket.emit('joinRoom', { username, roomName });
+      console.log(players)
+    });
+
+    /**
+     * Leave a room
+     */
+    $("#leave-room").on("click", (socket) => {
+      socket.emit('disconnect');
+      $('.menu').css('display', 'block');
+      $('.room').css('display', 'none');
     })
 
-    $('#shuffleDeck').on('click', () => {
-        let cards = deck.shuffle();
-        document.querySelector('.table').innerHTML = '';
-        for(let i = 0; i < cards.length; i++){
-            let div = document.createElement('div');
-            div.classList += 'card';
-            let color = document.createElement('p');
-            let value = document.createElement('p');
-            color.textContent = cards[i].color;
-            value.textContent = cards[i].val;
-            div.style.backgroundColor = cards[i].color;
-            div.append(color);
-            div.append(value);
-            $('.table').append(div);
-        }
+    /**
+     * Send a message
+     */
+    $("#sendMessage").on("click", () => {
+      const message = $("#message").val();
+      if(!message){
+        alert('Enter a message')
+        return;
+      }
+      
+      socket.emit('message', ({ message }));
+      $("#message").val('');
     })
-  
+
+
+    socket.on('message', (data) => {
+      const markup = `
+        <li>
+          <p>${curUser}: ${data.message}</p>
+        </li>
+      `;
+
+      const oddMarkup = `
+        <li class="odd">
+          <p>${data.message}</p>
+        </li>
+      `;
+
+      const messages = document.getElementById('chat-log').getElementsByTagName('li')
+      if(messages.length % 2 === 1){
+        $("#chat-log").append(oddMarkup);
+      }
+      else{
+        $("#chat-log").append(markup);
+      }
+
+    })
+
+    /**
+     * Create a new room for the game
+     */
+    socket.on('newRoom', (data) => {
+      const heading = `Room: ${data.roomName}`;
+      const name = `Created by: ${data.username}`;
+
+      $('.menu').css('display', 'none');
+      $('.room').css('display', 'flex');
+
+      $('#room-heading').html(heading);
+      $('#roomCreator').html(name);
+
+      $("#actual-num").html(data.players.length);
+
+      for(i = 0; i < data.players.length; i++){
+        let name = data.players[i].username;
+        let status = data.players[i].ready ? "Ready" : "Join";
+        let markup = `
+          <li class="player-item">
+            <div class="player-icon">
+              <div></div>
+            </div>
+            <p class="player-item-name">${name}</p>
+            <div class="player-status">
+              <button class="status-text">${status}</button>
+            </div>
+          </li>
+        `
+        $("#player-list").append(markup);
+      }
+    });
+
+    /**
+     * Have player join room
+     */
+    socket.on('newPlayerJoins', (data) => {
+      const heading = `Room: ${data.roomName}`;
+      const name = `Created by: ${data.players[0].username}`;
+
+      $('.menu').css('display', 'none');
+      $('.room').css('display', 'flex');
+
+      $('#room-heading').html(heading);
+      $('#roomCreator').html(name);
+
+      $("#actual-num").html(data.players.length);
+
+      for(i = 0; i < data.players.length; i++){
+        let name = data.players[i].username;
+        let status = data.players[i].ready ? "Ready" : "Join";
+        let markup = `
+          <li class="player-item">
+            <div class="player-icon">
+              <div></div>
+            </div>
+            <p class="player-item-name">${name}</p>
+            <div class="player-status">
+              <button class="status-text">${status}</button>
+            </div>
+          </li>
+        `
+        $("#player-list").append(markup);
+      }
+
+    })
+
+    socket.on('updateOtherRoomsAfterJoin', (data) => {
+      $("#actual-num").html(data.players.length);
+      $("#player-list").empty();
+      for(i = 0; i < data.players.length; i++){
+        let name = data.players[i].username;
+        let status = data.players[i].ready ? "Ready" : "Join";
+        let markup = `
+          <li class="player-item">
+            <div class="player-icon">
+              <div></div>
+            </div>
+            <p class="player-item-name">${name}</p>
+            <div class="player-status">
+              <button class="status-text">${status}</button>
+            </div>
+          </li>
+        `;
+        
+        $("#player-list").append(markup);
+      }
+    })
+
+
+
+
+
+
     // New Game created by current client. Update the UI and create new Game var.
     socket.on('newGame', (data) => {
       const message =
         `Hello, ${data.name}. Please ask your friend to enter Game ID: 
         ${data.room}. Waiting for player 2...`;
-  
+
       // Create game for player 1
       game = new Game(data.room);
       game.displayBoard(message);
     });
-  
+
     /**
        * If player creates the game, he'll be P1(X) and has the first turn.
        * This event is received when opponent connects to the room.
@@ -317,20 +481,20 @@
       $('#userHello').html(message);
       player.setCurrentTurn(true);
     });
-  
+
     /**
        * Joined the game, so player is P2(O). 
        * This event is received when P2 successfully joins the game room. 
        */
     socket.on('player2', (data) => {
       const message = `Hello, ${data.name}`;
-  
+
       // Create game for player 2
       game = new Game(data.room);
       game.displayBoard(message);
       player.setCurrentTurn(false);
     });
-  
+
     /**
        * Opponent played his turn. Update UI.
        * Allow the current player to play now. 
@@ -339,16 +503,17 @@
       const row = data.tile.split('_')[1][0];
       const col = data.tile.split('_')[1][1];
       const opponentType = player.getPlayerType() === P1 ? P2 : P1;
-  
+
       game.updateBoard(opponentType, row, col, data.tile);
       player.setCurrentTurn(true);
     });
-  
+
     // If the other player wins, this event is received. Notify user game has ended.
     socket.on('gameEnd', (data) => {
       game.endGame(data.message);
       socket.leave(data.room);
     });
+
   
     /**
        * End the game on any err event. 

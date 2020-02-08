@@ -34,3 +34,219 @@
     color: #000;
     font-weight: bold;
 }
+
+.room{
+    display: none;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    box-sizing: border-box;
+    height: 900px;
+    padding: 20px 5px;
+}
+
+#room-header{
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.room-middle{
+    width: 55%;
+    padding: 0 10px;
+}
+
+#room-header div{
+    width: 40%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.list-container{
+    display: flex;
+    flex-direction: column;
+    width: 20%;
+    height: 100%;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+    border-right: 1px solid #aaa;
+}
+
+.list-info{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: 40px;
+}
+
+.list-info div{
+    width: 50%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100%;
+}
+
+.list-info div p{
+    font-size: 18px;
+    text-align: left;
+    margin: 0;
+    display: flex;
+    width: 120px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#start-game{
+    width: 80px;
+    background-color: #888;
+    color: #000;
+    height: 100%;
+    border: 3px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+#player-list{
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    padding: 10px;
+}
+
+.player-status button.status-text{
+    padding: 0;
+    width: 100%;
+}
+
+.player-item{
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    height: 60px;
+    padding: 5px;
+    border: 2px solid #3b55cd;
+    border-radius: 2px;
+    background-color: #e0e0e0;
+    box-sizing: border-box;
+}
+
+.player-icon{
+    height: 100%;
+    width: 20%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.player-icon div{
+    border: 1px solid #bbb;
+    border-radius: 50%;
+    height: 35px;
+    width: 35px;
+}
+
+.player-item-name{
+    width: 55%;
+    text-align: left;
+    font-size: 16px;
+    margin: 0;
+    color: #555;
+}
+
+.player-status{
+    width: 30%;
+    height: 80%;
+    background-color: #aaa;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.status-text{
+    text-align: center;
+    margin: 0;
+}
+
+#chat{
+    width: 25%;
+    height: 100%;
+    padding: 0 10px;
+    border-left: 1px solid #aaa;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+#chat div{
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-content: flex-start;
+    height: 40px;
+}
+
+#chat-log{
+    width: 100%;
+    list-style: none;
+}
+
+#chat-log li{
+    width: 100%;
+    height: 22px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 1px solid #aaa;
+    background-color: white;
+    margin: 0;
+}
+
+#chat-log li p{
+    margin: 0;
+}
+
+#chat-log li.odd{
+    background-color: #e0e0e0;
+}
+
+#chat .message-cont{
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid #3b55cd;
+}
+
+#chat .message-cont input{
+    width: 75%;
+}
+
+#chat .message-cont button{
+    width: 25%;
+    padding: 0;
+    text-align: center;
+}
+
+#chat .message-cont input, #chat .message-cont button{
+    height: 100%;
+    margin: 0;
+}

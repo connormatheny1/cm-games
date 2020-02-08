@@ -4,7 +4,7 @@ const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 let rooms = 0;
-
+let players = []
 
 /**
  * original app.use, pre react integration
@@ -26,14 +26,67 @@ app.get('/tic', (req, res) => {
 });
 
 app.get('/crazy', (req, res) => {
-    res.sendFile(path.join(__dirname, 'crazy.html'));
+    res.sendFile(path.join(__dirname, 'crazyIndex.html'));
+    
 });
+
+app.get('/crazy/:roomId', (req, res) => {
+    //res.sendFile(path.join(__dirname, "crazy-rooms.html"));
+    //res.send(path.join(__dirname, "crazy-rooms.html"), {roomId: req.params.roomId})
+})
 
 
 /**
  * Socket connections
  */
 io.on('connection', (socket) => {
+
+    //create room
+    socket.on('createRoom', (data) => {
+        socket.join(`${data.roomName}`);
+        players.push({
+            username: data.username,
+            inGame: false,
+            ready: false,
+            roomOwner: true
+        })
+        socket.emit('newRoom', { roomName: data.roomName, username: data.username, players: players })
+    });
+
+    //join a room
+    socket.on('joinRoom', (data) => {
+        const { username, roomName } = data;
+        const room = io.nsps['/'].adapter.rooms[data.roomName];
+        if(room){
+            socket.join(data.roomName);
+            players.push({
+                username: data.username,
+                inGame: false,
+                ready: false,
+                roomOwner: false
+            })
+            socket.broadcast.to(data.roomName).emit('updateOtherRoomsAfterJoin', { players })
+            socket.emit('newPlayerJoins', { username, roomName, players })
+        }
+        else{
+            socket.emit('err', { message: 'Sorry, room doesnt exist'});
+        }
+    });
+
+    socket.on('disconnect', () => {
+        let i = players.indexOf(socket);
+        players.splice(i, 1);
+        socket.broadcast.emit('updateOtherRoomsAfterJoin', { players })
+    })
+
+    socket.on('message', (data) => {
+        const message = data.message;
+        socket.emit('message', { message })
+    })
+//maybe need to have the message send a broadcast too based on the id or some shit idk
+
+
+
 
     // Create a new game room and notify the creator of game.
     socket.on('createGame', (data) => {

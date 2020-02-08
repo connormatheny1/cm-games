@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Crazy 8s</title>
+		<link rel="stylesheet" href="crazy.css">
+		<link rel="stylesheet" href="node_modules/skeleton-css/css/skeleton.css">
+	</head>
+	<body>
+			<div class="menu crazy">
+				<h1>Crazy 8s</h1>
+				<h4>Create a room</h4>
+				<input type="text" name="username" id="username" placeholder="Enter a username" />
+				<input type="text" name="roomName" id="createRoom" placeholder="Enter a room name" />
+				<button id="newRoom">Create Room</button>
+				<br><br><br>
+				<h4>Join a room</h4>
+				<input type="text" name="usernameJoin" id="usernameJoin" placeholder="Enter a username" />
+				<input type="text" name="roomNameJoin" id="roomNameJoin" placeholder="Name of room to join" />
+				<button id="joinRoom">Join Room</button>
+			</div>
+
+			<div class="room">
+				<div class="list-container">
+					<div class="tab">
+						<span id="people-tab">People</span>
+						<span id=""></span>
+					</div>
+					<div class="list-info">
+						<div>
+							<p>Players: <span id="actual-num"></span> / 3</p>
+						</div>
+						<button id="start-game" disabled>Start</button>
+					</div>
+					<ul id="player-list"></ul>
+				</div>
+				<div class="room-middle">
+					<div id="room-header">
+						<h5 id="room-heading"></h5>
+						<h5 id="roomCreator"></h5>
+						<div>
+							<button id="leave-room">Leave Room</button>
+						</div>
+					</div>
+				</div>
+				<div id="chat">
+					<h5>Chat</h5>
+					<div>
+						<ul id="chat-log">
+							
+						</ul>
+						<div class="message-cont">
+							<input type="text" name="message" id="message" placeholder="Message..." />
+							<button id="sendMessage">Send</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="gameBoard" style="display: none;">
+				<h2 id="userHello"></h2>
+				<h3 id="turn"></h3>
+				<div class="table">
+
+				</div>
+			</div>
+		
+		<script src="node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="crazy.js"></script>
+	</body>
+</html>
