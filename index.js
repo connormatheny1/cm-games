@@ -6,6 +6,15 @@ const io = require('socket.io')(server);
 let rooms = 0;
 let players = []
 let messages = [];
+let messageId = 0;
+
+
+/**
+ * ADD TO SERVER SIDE MESSAGES ARRAY TO KEEP CHAT LOG, NUMBER EACH ONE, 
+ * ADD MESSAGE AND SENDER IN OBJ, THEN WHEN NEW PLAYER JOINS REBUILD LOG FOR THEM
+ */
+
+
 
 /**
  * original app.use, pre react integration
@@ -77,7 +86,7 @@ io.on('connection', (socket) => {
             socket.emit('newPlayerJoins', { username, roomName, players })
         }
         else{
-            socket.emit('err', { message: 'Sorry, room doesnt exist'});
+            socket.emit('err', { type:'roomNotFound', message: 'Sorry, room doesnt exist'});
         }
     });
     
@@ -100,6 +109,14 @@ io.on('connection', (socket) => {
         const room = data.room;
         socket.emit('message', { message, from });
         socket.broadcast.to(room).emit('message', { message, from })
+
+        messages.push({
+            id: messageId++,
+            from: from,
+            to: room,
+            text: message
+        });
+
 
     });
 

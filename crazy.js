@@ -6,6 +6,7 @@
     let deck;
     let players = [];
     let curUser;
+    let errors = [];
   
     const socket = io.connect('https://cm-games.herokuapp.com/');
     //const socket = io.connect('http://localhost:5000');
@@ -491,7 +492,19 @@
        * End the game on any err event. 
        */
     socket.on('err', (data) => {
-      game.endGame(data.message);
+      //game.endGame(data.message);
+      const { message, type } = data;
+      errors.push({
+        type: type,
+        message: message
+      })
+
+      if(type === 'roomNotFound'){
+        alert(`Type: ${type}\nMessage: ${message}\n`);
+        $("#usernameJoin").val("");
+        $("#roomNameJoin").val("");
+        $("#usernameJoin").focus();
+      }
     });
   }());
   
