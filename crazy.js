@@ -323,7 +323,7 @@
     /**
      * Leave a room
      */
-    $("#leave-room").on("click", (socket) => {
+    $("#leave-room").on("click", () => {
       socket.emit('disconnect');
       $('.menu').css('display', 'block');
       $('.room').css('display', 'none');
