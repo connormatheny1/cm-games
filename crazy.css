@@ -250,3 +250,9 @@
     height: 100%;
     margin: 0;
 }
+
+#isTyping{
+    display: none;
+    color: #888;
+    transition: display .4s;
+}

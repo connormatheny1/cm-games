@@ -7,8 +7,8 @@
     let players = [];
     let curUser;
   
-    const socket = io.connect('https://cm-games.herokuapp.com/');
-    //const socket = io.connect('http://localhost:5000');
+    //const socket = io.connect('https://cm-games.herokuapp.com/');
+    const socket = io.connect('http://localhost:5000');
 
     class Deck {
         constructor(players){
@@ -55,22 +55,17 @@
     }
   
     class Player {
-      constructor(name) {
-        this.name = name;
-        this.currentTurn = true;
-        this.playsArr = 0;
+      constructor(username, id, currentRoom) {
+        this.username = username;
+        this.currentTurn = false;
         this.cards = [];
-        this.id = 0;
+        this.id = id;
+        this.messagesSent = [];
+        this.currentRoom = currentRoom;
       }
   
       static get wins() {
         return [7, 56, 448, 73, 146, 292, 273, 84];
-      }
-  
-      // Set the bit of the move played by the player
-      // tileValue - Bitmask used to set the recently played move.
-      updatePlaysArr(tileValue) {
-        this.playsArr += tileValue;
       }
   
       getPlaysArr() {
@@ -84,8 +79,8 @@
         $('#turn').text(message);
       }
   
-      getPlayerName() {
-        return this.name;
+      getUsername() {
+        return this.username;
       }
   
       getPlayerType() {
@@ -100,7 +95,13 @@
           return this.cards;
       }
 
+      getCurrentRoom(){
+        return this.currentRoom;
+      }
 
+      setMessagesSent(msg){
+        this.messagesSent.push(msg);
+      }
     }
   
     // roomId Id of the room in which the game is running on the server.
@@ -219,32 +220,6 @@
       }
     }
 
-
-
-
-      // Create a new game. Emit newGame event.
-    $('#new').on('click', () => {
-      const name = $('#nameNew').val();
-      if (!name) {
-        alert('Please enter your name.');
-        return;
-      }
-      socket.emit('createGame', { name });
-      player = new Player(name, P1);
-    });
-
-    // Join an existing game on the entered roomId. Emit the joinGame event.
-    $('#join').on('click', () => {
-      const name = $('#nameJoin').val();
-      const roomID = $('#room').val();
-      if (!name || !roomID) {
-        alert('Please enter your name and game ID.');
-        return;
-      }
-      socket.emit('joinGame', { name, room: roomID });
-      player = new Player(name, P2);
-    });
-
     $('#createDeck').on('click', () => {
       deck = new Deck(1);
       deck.create();
@@ -283,12 +258,10 @@
     /**
      * Create new room
      */
-    let roomOwner;
-
     $('#newRoom').on('click', () => {
       const roomName = $("#createRoom").val();
       const username = $("#username").val();
-      
+      let cleanName;
       if(!roomName){
         alert('Please enter a room name')
         return
@@ -298,7 +271,16 @@
         return;
       }
       socket.emit('createRoom', { roomName, username })
-      curUser = username;
+
+      if(username.indexOf(' ') >= 0){
+        cleanName = username.replace(/\s/g, "").toLowerCase();
+        player = new Player(username, cleanName, roomName);
+      }
+      else{
+        player = new Player(username, username, roomName);
+      }
+
+      console.log(player);
     });
 
     /**
@@ -307,6 +289,7 @@
     $("#joinRoom").on("click", () => {
       const roomName = $("#roomNameJoin").val();
       const username = $("#usernameJoin").val();
+      let cleanName;
 
       if(!roomName){
         alert('Please enter a room name')
@@ -316,8 +299,16 @@
         alert('Please enter a username');
         return;
       }
+
       socket.emit('joinRoom', { username, roomName });
-      console.log(players)
+
+      if(username.indexOf(' ') >= 0){
+        cleanName = username.replace(/\s/g, "").toLowerCase();
+        player = new Player(username, cleanName, roomName);
+      }
+      else{
+        player = new Player(username, username, roomName);
+      }
     });
 
     /**
@@ -334,26 +325,37 @@
      */
     $("#sendMessage").on("click", () => {
       const message = $("#message").val();
+
       if(!message){
         alert('Enter a message')
         return;
       }
       
-      socket.emit('message', ({ message }));
-      $("#message").val('');
-    })
+      socket.emit('message', ({ message, from: player.getUsername(), room: player.getCurrentRoom() }));
 
+      $("#message").val('');
+    });
+
+    /**
+     * isTyping
+     */
+
+    $("#message").keyup( () => {
+      const name = player.getUsername();
+      const room = player.getCurrentRoom();
+      socket.emit('isTyping', { name, room });
+    })
 
     socket.on('message', (data) => {
       const markup = `
         <li>
-          <p>${curUser}: ${data.message}</p>
+          <p>${data.from}: ${data.message}</p>
         </li>
       `;
 
       const oddMarkup = `
         <li class="odd">
-          <p>${data.message}</p>
+        <p>${data.from}: ${data.message}</p>
         </li>
       `;
 
@@ -364,6 +366,9 @@
       else{
         $("#chat-log").append(markup);
       }
+      if($("#isTyping").css("display") == "inline"){
+        $("#isTyping").css("display", "none")
+      }
 
     })
 
@@ -373,15 +378,11 @@
     socket.on('newRoom', (data) => {
       const heading = `Room: ${data.roomName}`;
       const name = `Created by: ${data.username}`;
-
       $('.menu').css('display', 'none');
       $('.room').css('display', 'flex');
-
       $('#room-heading').html(heading);
       $('#roomCreator').html(name);
-
       $("#actual-num").html(data.players.length);
-
       for(i = 0; i < data.players.length; i++){
         let name = data.players[i].username;
         let status = data.players[i].ready ? "Ready" : "Join";
@@ -406,15 +407,11 @@
     socket.on('newPlayerJoins', (data) => {
       const heading = `Room: ${data.roomName}`;
       const name = `Created by: ${data.players[0].username}`;
-
       $('.menu').css('display', 'none');
       $('.room').css('display', 'flex');
-
       $('#room-heading').html(heading);
       $('#roomCreator').html(name);
-
       $("#actual-num").html(data.players.length);
-
       for(i = 0; i < data.players.length; i++){
         let name = data.players[i].username;
         let status = data.players[i].ready ? "Ready" : "Join";
@@ -431,8 +428,7 @@
         `
         $("#player-list").append(markup);
       }
-
-    })
+    });
 
     socket.on('updateOtherRoomsAfterJoin', (data) => {
       $("#actual-num").html(data.players.length);
@@ -454,46 +450,22 @@
         
         $("#player-list").append(markup);
       }
+    });
+
+    /**
+     * on istyping evt from server
+     */
+    socket.on('isTyping', (data) => {
+        const who = `${data.name} is typing...`
+        $("#isTyping").html(who);
+        $("#isTyping").css("display", "inline");
+
+        setTimeout(() => {
+          $("#isTyping").css("display", "none");
+        }, 2000)
+
     })
 
-
-
-
-
-
-    // New Game created by current client. Update the UI and create new Game var.
-    socket.on('newGame', (data) => {
-      const message =
-        `Hello, ${data.name}. Please ask your friend to enter Game ID: 
-        ${data.room}. Waiting for player 2...`;
-
-      // Create game for player 1
-      game = new Game(data.room);
-      game.displayBoard(message);
-    });
-
-    /**
-       * If player creates the game, he'll be P1(X) and has the first turn.
-       * This event is received when opponent connects to the room.
-       */
-    socket.on('player1', (data) => {
-      const message = `Hello, ${player.getPlayerName()}`;
-      $('#userHello').html(message);
-      player.setCurrentTurn(true);
-    });
-
-    /**
-       * Joined the game, so player is P2(O). 
-       * This event is received when P2 successfully joins the game room. 
-       */
-    socket.on('player2', (data) => {
-      const message = `Hello, ${data.name}`;
-
-      // Create game for player 2
-      game = new Game(data.room);
-      game.displayBoard(message);
-      player.setCurrentTurn(false);
-    });
 
     /**
        * Opponent played his turn. Update UI.

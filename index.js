@@ -5,6 +5,7 @@ const server = require('http').Server(app);
 const io = require('socket.io')(server);
 let rooms = 0;
 let players = []
+let messages = [];
 
 /**
  * original app.use, pre react integration
@@ -30,18 +31,18 @@ app.get('/crazy', (req, res) => {
     
 });
 
-app.get('/crazy/:roomId', (req, res) => {
-    //res.sendFile(path.join(__dirname, "crazy-rooms.html"));
-    //res.send(path.join(__dirname, "crazy-rooms.html"), {roomId: req.params.roomId})
-})
-
 
 /**
  * Socket connections
  */
 io.on('connection', (socket) => {
 
-    //create room
+    /**
+     * On createRoom evt, join created room,
+     * add to player array on server,
+     * emit newRoom event, pass roomName, username, and server side player array
+     * 
+     */
     socket.on('createRoom', (data) => {
         socket.join(`${data.roomName}`);
         players.push({
@@ -53,7 +54,14 @@ io.on('connection', (socket) => {
         socket.emit('newRoom', { roomName: data.roomName, username: data.username, players: players })
     });
 
-    //join a room
+    /**
+     * On joinRoom evt, takes data arg with joining players username and requested room name,
+     * Check if room exists, can check room.length for players in room, can set room limit here,
+     * If room exists, join, push obj to server side player arr,
+     * Broadcast updateOtherRoomsAfterJoin evt to room, pass in player Arr,
+     * Emit newPlayerJoins evt, pass in username, roomName, and player Arr
+     * Else room doesnt exist, or is full, throws error that room doesnt exist, or is full
+     */
     socket.on('joinRoom', (data) => {
         const { username, roomName } = data;
         const room = io.nsps['/'].adapter.rooms[data.roomName];
@@ -72,18 +80,38 @@ io.on('connection', (socket) => {
             socket.emit('err', { message: 'Sorry, room doesnt exist'});
         }
     });
-
+    
+    /**
+     * On player disconnection, or leaveRoom button clicked, emit disconnect
+     * emit updateOtherRoomsAfterJoin, pass in players Arr
+     */
     socket.on('disconnect', () => {
         let i = players.indexOf(socket);
         players.splice(i, 1);
         socket.broadcast.emit('updateOtherRoomsAfterJoin', { players })
     })
 
+    /**
+     * On message emit
+     */
     socket.on('message', (data) => {
         const message = data.message;
-        socket.emit('message', { message })
+        const from = data.from;
+        const room = data.room;
+        socket.emit('message', { message, from });
+        socket.broadcast.to(room).emit('message', { message, from })
+
+    });
+
+    /**
+     * On isTyping
+     */
+    socket.on('isTyping', (data) => {
+        const name = data.name;
+        const room = data.room;
+        socket.emit('isTyping', { name });
+        socket.broadcast.to(room).emit('isTyping', { name })
     })
-//maybe need to have the message send a broadcast too based on the id or some shit idk
 
 
 
