@@ -2,8 +2,8 @@
 <html>
 	<head>
 		<title>Crazy 8s</title>
-		<link rel="stylesheet" href="crazy.css">
 		<link rel="stylesheet" href="node_modules/skeleton-css/css/skeleton.css">
+		<link rel="stylesheet" href="crazy.css">
 	</head>
 	<body>
 			<div class="menu crazy">
@@ -28,7 +28,7 @@
 						<div>
 							<p>Players: <span id="actual-num"></span> / 3</p>
 						</div>
-						<button id="start-game" disabled>Start</button>
+						<button id="start-game" disabled="true">Start</button>
 					</div>
 					<ul id="player-list"></ul>
 				</div>
@@ -39,6 +39,16 @@
 						<div>
 							<button id="leave-room">Leave Room</button>
 						</div>
+					</div>
+					<div class="gameBoard">
+						<div class="notStarted">
+							<h4>Not all players have readied up yet</h4>
+							<p>To start the game, all players in this room need to click 'Join' next to their own name in the player list</p>
+						</div>
+						<div class="started">
+
+						</div>
+
 					</div>
 				</div>
 				<div id="chat">
