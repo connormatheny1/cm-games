@@ -1,6 +1,7 @@
 (function init(){
   //INITIAL VARIABLE DECLARATIONS
       let player, game, deck;
+      let gameHasStarted = false;
       let errors = [];
       //const socket = io.connect('http://localhost:5000/crazy');
       const socket = io.connect('https://cm-games.herokuapp.com/crazy');
@@ -28,14 +29,14 @@
           }
 
           shuffle(){
-            console.log(this.deck)
+            //console.log(this.deck)
             let shuffled = [];
             let num = 52;
             while(this.deck.length > 0){
               let rand = Math.floor(Math.random() * (Math.floor(this.deck.length) - Math.ceil(0)) + Math.ceil(0));
-              console.log(rand)
+              //console.log(rand)
               let randCard = this.deck[rand];
-              console.log(randCard)
+              //console.log(randCard)
               shuffled.push({
                 color: this.deck[rand].color,
                 val: this.deck[rand].val
@@ -284,6 +285,10 @@
         $("#start-game").on("click", () => {
           if($(this).prop("disabled")){
             alert('cant start game, probably because everyone isn\'t ready');
+            return;
+          }
+          else if(gameHasStarted){
+            alert('games has already started');
             return;
           }
           else{
@@ -545,20 +550,48 @@
        */
         socket.on('startGame', (data) => {
           const { players } = data;
-
+          const name = player.getUsername();
+          const order = player.getOrder()
           game = new Game(players);
+
+
+          const findObj = players.findIndex(item => item.order !== order);
+          //console.log(findObj)
+          
+            if(order === findObj){
+              $("#my-name").html(name);
+              $("#opponent-name").html(players[findObj].username);
+            }
+            else{
+              $("#my-name").html(`${players[order].username} (you)`);
+              $("#opponent-name").html(players[findObj].username);  
+          }
           game.displayBoard();
-          //game.displayBoard();
-          console.log(game);
+          //console.log(game);
         });
 
         socket.on('updateOthersStartGame', (data) => {
           const { players } = data;
-
+          const name = player.getUsername();
           game = new Game(players);
+          
+          const findObj = players.findIndex(item => item.username === name);
+          for(let i = 0; i < players.length; i++){
+            if(i !== findObj){
+              $("#my-name").html(`${players[findObj].username} (you)`);
+              $("#opponent-name").html(players[i].username);
+              break;
+            }
+            else{
+              $("#my-name").html(players[i].username);
+              $("#opponent-name").html(players[findObj].username);
+              break;
+            }
+          }
+          console.log(`findobj: \n\n`)
+          console.log(findObj)
           game.displayBoard();
-          //game.displayBoard();
-          console.log(game);
+          //console.log(game);
         })
 
   //DECK MANIPULATION FUNCTIONS
