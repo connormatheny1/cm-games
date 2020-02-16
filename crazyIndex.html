@@ -14,11 +14,10 @@
 				<button id="newRoom">Create Room</button>
 				<br><br><br>
 				<h4>Join a room</h4>
-				<input type="text" name="usernameJoin" id="usernameJoin" placeholder="Enter a username" />
+				<input type="email" name="usernameJoin" id="usernameJoin" placeholder="Enter a username" />
 				<input type="text" name="roomNameJoin" id="roomNameJoin" placeholder="Name of room to join" />
 				<button id="joinRoom">Join Room</button>
 			</div>
-
 			<div class="room">
 				<div class="list-container">
 					<div class="tab">
@@ -26,11 +25,18 @@
 					</div>
 					<div class="list-info">
 						<div>
-							<p>Players: <span id="actual-num"></span> / 3</p>
+							<p>Players: <span id="actual-num"></span> / 2</p>
 						</div>
-						<button id="start-game" disabled="true">Start</button>
+						<button id="start-game" disabled>Start</button>
 					</div>
 					<ul id="player-list"></ul>
+					<div class="ready-players">
+						<p>Ready Players: <span id="readyPlayers">0</span> / 2</p>
+						<ul id="ready-players-list"></ul>
+					</div>
+					<div id="inprogress">
+						<p id="game-in-progress"></p>
+					</div>
 				</div>
 				<div class="room-middle">
 					<div id="room-header">
@@ -46,9 +52,31 @@
 							<p>To start the game, all players in this room need to click 'Join' next to their own name in the player list</p>
 						</div>
 						<div class="started">
-
+							<div class="game-section">
+								<div id="top-label">
+									<span id="opponent-name"></span>
+								</div>
+								<div id="opponent-card-cont">
+									<ul id="opponent-cards"></ul>
+								</div>
+							</div>
+							<div class="game-section middle">
+								<div id="game-deck">
+									<div class="deck-display"></div>
+								</div>
+								<div id="played-cards">
+									<div class="deck-display"></div>
+								</div>
+							</div>
+							<div class="game-section bottom">
+								<div id="my-card-cont">
+									<ul id="my-cards"></ul>
+								</div>
+								<div id="bottom-label">
+									<span id="my-name"></span>
+								</div>
+							</div>
 						</div>
-
 					</div>
 				</div>
 				<div id="chat">
@@ -65,7 +93,6 @@
 					</div>
 				</div>
 			</div>
-
 			<div class="gameBoard" style="display: none;">
 				<h2 id="userHello"></h2>
 				<h3 id="turn"></h3>

@@ -8,6 +8,9 @@ let players = []
 let messages = [];
 let messageId = 0;
 let playerOrder = 1;
+let readyPlayers = [];
+let canStart = false;
+let game = [];
 
 /**
  * ADD TO SERVER SIDE MESSAGES ARRAY TO KEEP CHAT LOG, NUMBER EACH ONE, 
@@ -40,7 +43,6 @@ let playerOrder = 1;
  * /crazy NAMESPACE
  */
     io.of("/crazy").on('connection', (socket) => {
-        //console.log('New connection: ' + socket.id)
         /**
          * On createRoom evt, join created room,
          * add to player array on server,
@@ -61,7 +63,6 @@ let playerOrder = 1;
                         owner: data.username
                     });
             });
-
         /**
          * On joinRoom evt, takes data arg with joining players username and requested room name,
          * Check if room exists, can check room.length for players in room, can set room limit here,
@@ -86,68 +87,72 @@ let playerOrder = 1;
                             owner: gameRooms[0].owner,
                             order: player.order,
                             socketId: socket.id
-                        })
+                        });
                     socket.broadcast.to(roomName).emit('updateOtherPlayersAfterJoin', { players });
-                    console.log(players)
+                    console.log(players);
                 }
                 else{
                     socket.emit('err', { type:'roomNotFound', message: 'Sorry, room doesn\'t exist'});
                 }
             });
-
-        /**
-         * On player disconnection, or leaveRoom button clicked, emit disconnect
-         * emit updateOtherRoomsAfterJoin, pass in players Arr
-         */
-            socket.on('leave', (data) => {
-                let index;
-                for(let i = 0; i < players.length; i++){
-                    if(players[i].username === data.name){
-                        index = i;
-                    }
-                }
-                players.splice(index, 1);
-                socket.broadcast.to(data.room).emit('updatePlayersAfterLeave', { players });
-            })
-
-
         /**
          * emit playerReady from client
          */
             socket.on('playerReady', (data) => {
                 const { username, order, socketId, room, buttonId } = data; 
                 const findObj = players.findIndex(item => item.socketId === socket.id);
-                console.log(`\n\n`)
-                console.log(findObj);
                 if(buttonId == order){
                     players[findObj].ready = true;
-                    socket.emit('playerReadyUp', { players });
-                    socket.broadcast.to(room).emit('updatePlayersAfterReady', { players });
+                    readyPlayers.push({
+                        socketId: socket.id,
+                        name: players[findObj].username,
+                        order: players[findObj].order
+                    });
+                    if(readyPlayers.length === 2){
+                        canStart = true;
+                        socket.emit('canStartGame', canStart);
+                        socket.broadcast.to(room).emit('updateOthersCanStartGame', canStart);
+                    }
+                    else{
+                        canStart = false;
+                        socket.emit('canStartGame', canStart);
+                        socket.broadcast.to(room).emit('updateOthersCanStartGame', canStart);
+                    }
+                    socket.emit('playerReadyUp', { players, readyPlayers, canStart });
+                    socket.broadcast.to(room).emit('updatePlayersAfterReady', { players, readyPlayers, canStart });
                 }
                 else{
                     socket.emit('err', { type: 'permissionDenied', message: 'You can\'t ready up for another player'});
                 }  
             });
-
-
-
-
-
-
-
-
-
-
         /**
-         * A player changes their ready status to unready
+         * Player Unready
          */
             socket.on('playerUnready', (data) => {
-                const { name, room, status } = data;
-                
-                socket.emit('playerUnreadyUp', {name, room, status: false});
-                socket.broadcast.to(room).emit('playerUnreadyUp', {name, room, status: false});
-            })
-
+                const { username, order, socketId, room, buttonId } = data; 
+                const findObj = players.findIndex(item => item.socketId === socket.id);
+                //console.log(`\n\n`)
+                //console.log(findObj);
+                if(buttonId == order){
+                    players[findObj].ready = false;
+                    readyPlayers.splice(findObj, 1);
+                    if(readyPlayers.length === 2){
+                        canStart = true;
+                        socket.emit('canStartGame', canStart);
+                        socket.broadcast.to(room).emit('updateOthersCanStartGame', canStart);
+                    }
+                    else{
+                        canStart = false;
+                        socket.emit('canStartGame', canStart);
+                        socket.broadcast.to(room).emit('updateOthersCanStartGame', canStart);
+                    }
+                    socket.emit('playerUnready', { players, readyPlayers, canStart });
+                    socket.broadcast.to(room).emit('updatePlayersAfterUnready', { players, readyPlayers, canStart });
+                }
+                else{
+                    socket.emit('err', { type: 'permissionDenied', message: 'You can\'t unready for another player, or ready them idk how well this validates'});
+                } 
+            });
         /**
          * On message emit
          */
@@ -157,7 +162,6 @@ let playerOrder = 1;
                 const room = data.room;
                 socket.emit('message', { message, from });
                 socket.broadcast.to(room).emit('message', { message, from })
-
                 messages.push({
                     id: messageId++,
                     from: from,
@@ -165,14 +169,6 @@ let playerOrder = 1;
                     text: message
                 });
             });
-
-            search = (key, arr) => {
-                for(let i = 0; i < arr.length; i++){
-                    if(arr[i].username == key){
-                        return arr[i]
-                    }
-                }
-            }
         /**
          * On isTyping
          */
@@ -183,12 +179,68 @@ let playerOrder = 1;
                 socket.broadcast.to(room).emit('isTyping', { name })
             });
         /**
-         * disconnection event
+         * START GAME
          */
-    })
+        socket.on('startGame', (data) => {
+            //game.push(data.game);
+            socket.emit('startGame', { players });
+            socket.broadcast.to(data.room).emit('updateOthersStartGame', { players })
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /**
+         * CERTAINLY NEEDS WORK
+         * On player disconnection, or leaveRoom button clicked, emit disconnect
+         * emit updateOtherRoomsAfterJoin, pass in players Arr
+         */
+            socket.on('leave', (data) => {
+                const { username, order, socketId, room, buttonId } = data;
+                const findObj = players.findIndex(item => item.socketId === socket.id);
+                if(findObj > 0){
+                    if(players[findObj].socketId === socket.id){
+                        players.slice(findObj, 1);
+                        socket.emit('leaveRoom', { players })
+                        socket.broadcast.to(data.room).emit('updatePlayersAfterLeave', { players });
+                    }
+                    else{
+                        socket.emit('err', { type: 'failedValidation', message: 'error thrown on check username when removing from server side players []'})
+                    }
+                }
+                else{
+                    socket.emit('err', { type: 'indexOutOfBounds', message: 'couldn\'t find correct object in players []'})
+                }
+                // let index;
+                // for(let i = 0; i < players.length; i++){
+                //     if(players[i].username === data.name){
+                //         index = i;
+                //     }
+                // }
+                // players.splice(index, 1);
+                // socket.broadcast.to(data.room).emit('updatePlayersAfterLeave', { players });
+            });
+
+            socket.on('disconnect', (data) => {
+                console.log(`${socket.id} disconnected`)
+            })
+    });
+ 
+
+
+
 
 /**
- * Socket connections
+ * Tic Tac Toe socket connections
  */
 io.of('/tic').on('connection', (socket) => {
     // Create a new game room and notify the creator of game.
