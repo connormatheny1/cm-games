@@ -4,7 +4,7 @@
     let player;
     let game;
 
-    const socket = io.connect('https://cm-games.herokuapp.com/tic');
+    const socket = io.connect('https://cm-games.herokuapp.com//tic');
     //const socket = io.connect('http://localhost:5000/tic');
   
     class Player {

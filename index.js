@@ -116,8 +116,8 @@ let playerOrder = 1;
          */
             socket.on('playerReady', (data) => {
                 const { username, order, socketId, room, buttonId } = data; 
-                if(order === buttonId){
-                    const findObj = players.find(item => item.username === username);
+                if(order == buttonId){
+                    //const findObj = players.find(item => item.username === username);
                     players[order].ready = true;
                     socket.emit('playerReadyUp', { players });
                     socket.broadcast.to(room).emit('updatePlayersAfterReady', { players });

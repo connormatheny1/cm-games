@@ -357,6 +357,7 @@
           button.id = i;
           button.innerHTML = status;
           button.addEventListener("click", function(ele){
+            //if(players[i].)
               socket.emit('playerReady', {
                 ele,
                 username: player.getUsername(),
