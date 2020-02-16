@@ -340,7 +340,6 @@
       //add a player to the player list
       createPlayerElement = (data) => {
         const { players } = data;
-
         for(let i = 0; i < players.length; i++){
           let name = players[i].username;
           let status = players[i].ready ? "Ready" : "Join";
@@ -354,7 +353,7 @@
           nameP.innerHTML = `${players[i].username}`;
           let button = document.createElement('button');
           button.classList += "status-text";
-          button.id = i;
+          button.id = players[i].order;
           button.innerHTML = status;
           button.addEventListener("click", function(ele){
             //if(players[i].)
@@ -366,6 +365,8 @@
                 room: player.getCurrentRoom(),
                 buttonId: ele.target.attributes[1].value
               })
+              console.log(player.getOrder());
+              console.log(ele.target.attributes[1].value)
           });
 
           if(players[i].ready){
