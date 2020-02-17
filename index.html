@@ -7,6 +7,24 @@
 	</head>
 	<body>
 		<div class="container">
+            <nav id="topnav">
+                <ul id="leftnav">
+                    <li class="nav-items">
+                        <a href="/tic">
+                            Tic
+                        </a>
+                    </li>
+                    <li class="nav-items">
+                            <a href="/crazy">
+                                Crazy
+                            </a>
+                        </li>
+                </ul>
+                <ul id="rightnav">
+                    <li class="nav-items">Login</li>
+                    <li class="nav-items">Register</li>
+                </ul>
+            </nav>
 			<div class="menu">
 				<h1>To games</h1>
 				<ol>
@@ -16,6 +34,45 @@
 			</div>
 		</div>
 		<script src="node_modules/jquery/dist/jquery.min.js"></script>
-		<script src="/socket.io/socket.io.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 	</body>
 </html>
+<!-- <!DOCTYPE html>
+<html>
+	<head>
+		<title>CM Games</title>
+		<link rel="stylesheet" href="main.css">
+		<link rel="stylesheet" href="node_modules/skeleton-css/css/skeleton.css">
+	</head>
+	<body>
+		<div class="container">
+			<div id="errors"></div>
+			<div class="login-container">
+				<h4>Login</h4>
+				<form method="post" id="login">
+					<label for="usernameLogin">Username</label>
+					<input type="text" id="usernameLogin" name="usernameLogin" class="auth-form-input">
+
+					<label for="passwordLogin">Password</label>
+					<input type="password" id="passwordLogin" name="passwordLogin" class="auth-form-input">
+					<input type="submit" value="Login">
+				</form>
+				<h4>Register</h4>
+				<form method="post" id="register">
+					<label for="usernameRegister">Username</label>
+					<input type="text" id="usernameRegister" name="usernameRegister" class="auth-form-input">
+
+					<label for="passwordRegister">Password</label>
+					<input type="password" id="passwordRegister" name="passwordRegister" class="auth-form-input">
+					<input type="submit" value="Register">
+				</form>
+
+			</div>
+		</div>
+		<script src="node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	</body>
+</html> -->
+

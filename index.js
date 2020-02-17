@@ -1,8 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
+const bcrypt = require('bcrypt');
+const db = require('./db');
 const gameRooms = [];
 let players = []
 let messages = [];
@@ -11,7 +14,46 @@ let playerOrder = 1;
 let readyPlayers = [];
 let canStart = false;
 let game = [];
+let errors = [];
+let loggedInUsers = [];
+let deck;
+class Deck {
+    constructor(){
+      this.total = 0;
+      this.colors = ['red', 'green', 'yellow', 'blue'];
+      this.deck = [];
+      this.shuffledDeck = [];
+    }
+    create(){
+      for(let i = 0; i < this.colors.length; i++){
+        for(let j = 0; j < 13; j++){
+          let card = {
+            color: this.colors[i],
+            val: j+1
+          }
+          this.deck.push(card);
+        }
+      }
+      this.total = this.deck.length;
+    }
+    shuffle(){
+      let num = 52;
+      while(this.deck.length > 0){
+        let rand = Math.floor(Math.random() * (Math.floor(this.deck.length) - Math.ceil(0)) + Math.ceil(0));
+        let randCard = this.deck[rand];
+        this.shuffledDeck.push({
+          color: this.deck[rand].color,
+          val: this.deck[rand].val
+        });
+        this.deck.splice(rand, 1);              
+      }
+    }
 
+    getShuffledDeck(){
+      return this.shuffledDeck;
+    }
+    deal(players){}
+}
 /**
  * ADD TO SERVER SIDE MESSAGES ARRAY TO KEEP CHAT LOG, NUMBER EACH ONE, 
  * ADD MESSAGE AND SENDER IN OBJ, THEN WHEN NEW PLAYER JOINS REBUILD LOG FOR THEM
@@ -25,10 +67,17 @@ let game = [];
 //app.use(express.static(path.join(__dirname, 'client/build')));
 
 /**
- * Routes
+ * Get Routes
  */
     app.get('/', (req, res) => {
-        res.sendFile(path.join(__dirname, 'index.html'));
+        // if(loggedInUsers.length === 0){
+        //     res.sendFile(path.join(__dirname, 'loggedIn.html'));
+        //     //res.sendFile(path.join(__dirname, 'index.html'));
+        // }
+        // else{
+        //     res.sendFile(path.join(__dirname, 'loggedIn.html'));
+        // }
+        res.sendFile(path.join(__dirname, 'loggedIn.html'));
     });
 
     app.get('/tic', (req, res) => {
@@ -38,6 +87,58 @@ let game = [];
     app.get('/crazy', (req, res) => {
         res.sendFile(path.join(__dirname, 'crazyIndex.html'));
     });
+
+/**
+ * Post Routes
+ */
+    app.post('/login', async (req, res) => {
+        const errors = [];
+        const selectQuery = 'SELECT * FROM users WHERE username = $1';
+        const selectResult = await db.query(selectQuery, [req.body.username]);
+        if (selectResult.rows.length === 1) {
+            const auth = await bcrypt.compare(req.body.password, selectResult.rows[0].password);
+            if (auth) {
+                res.sendFile(path.join(__dirname, 'loggedIn.html'));
+            } else {
+                errors.push('Incorrect username/password');
+                res.sendFile(path.join(__dirname, 'index.html'));
+            }
+            } else {
+                errors.push('Incorrect username/password');
+                res.sendFile(path.join(__dirname, 'index.html'));
+            }
+    });
+    app.post('/register', async (req, res) => {
+        const errors = [];
+        if (req.body.password !== req.body.passwordConf) {
+          errors.push('The provided passwords do not match.');
+        }
+        if (!(req.body.email && req.body.username && req.body.password && req.body.passwordConf)) {
+          errors.push('All fields are required.');
+        }
+        const username = [req.body.username];
+        const email = [req.body.email];
+        const selectQuery = 'SELECT * FROM users WHERE username = $1';
+        const selectResult = await db.query(selectQuery, username);
+        if (selectResult.rows.length > 0) {
+          errors.push('That username is already taken.');
+        }
+        if (!errors.length) {
+          const idQuery = 'SELECT id FROM users WHERE id IS NOT NULL';
+          const idResult = await db.query(idQuery);
+          const newId = idResult.rows.length + 1;
+          const insertQuery = 'INSERT INTO users (id, username, password) VALUES ($1, $2, $3)';
+          const password = await bcrypt.hash(req.body.password, 10);
+          const name = req.body.name;
+          const parameters = [newId, req.body.username, password];
+          await db.query(insertQuery, parameters);
+          loggedInUsers.push(username)
+          res.sendFile(path.join(__dirname, 'loggedIn.html'));
+          
+        } else {
+            res.sendFile(path.join(__dirname, 'index.html'));
+        }
+      });
 
 /**
  * /crazy NAMESPACE
@@ -179,13 +280,28 @@ let game = [];
                 socket.broadcast.to(room).emit('isTyping', { name })
             });
         /**
-         * START GAME
+         * START GAME connections
          */
-        socket.on('startGame', (data) => {
-            //game.push(data.game);
-            socket.emit('startGame', { players });
-            socket.broadcast.to(data.room).emit('updateOthersStartGame', { players })
-        });
+            //Initial start game, updates UIs with board
+            socket.on('startGame', (data) => {
+                let numOfPlayers = players.length;
+                deck = new Deck();
+                deck.create()
+                deck.shuffle();
+                let shuffled = deck.getShuffledDeck();
+                for(let i = 0; i < players.length; i++){
+                    for(let j = 0; j < 8; j++){
+                        players[i].cards.push(shuffled[j]);
+                        shuffled.splice(j, 1);
+                    }
+                }
+                console.log(players);
+                socket.emit('startGame', { players, shuffled });
+                socket.broadcast.to(data.room).emit('updateOthersStartGame', { players, shuffled })
+            });
+
+            
+
 
 
 

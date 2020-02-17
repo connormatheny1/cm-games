@@ -10,12 +10,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.19.2",
+    "bcrypt": "^3.0.8",
     "body-parser": "^1.19.0",
     "dotenv": "^8.2.0",
     "eslint-plugin-import": "^2.20.0",
     "express": "^4.17.1",
     "jquery": "^3.4.1",
     "nodemon": "^2.0.2",
+    "pg": "^7.18.1",
+    "pg-promise": "^10.4.3",
     "skeleton": "^0.1.2",
     "skeleton-css": "^2.0.4",
     "socket.io": "^2.3.0"

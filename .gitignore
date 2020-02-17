@@ -5,3 +5,7 @@ crazyRoom.html
 crazy_copy.js
 Game.js
 .vscode/
+Procfile
+db.js
+create.js
+create.sql

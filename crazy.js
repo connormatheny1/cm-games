@@ -12,9 +12,9 @@
           constructor(){
             this.total = 0;
             this.colors = ['red', 'green', 'yellow', 'blue'];
-            this.deck = []
+            this.deck = [];
+            this.shuffledDeck = [];
           }
-
           create(){
             for(let i = 0; i < this.colors.length; i++){
               for(let j = 0; j < 13; j++){
@@ -27,28 +27,23 @@
             }
             this.total = this.deck.length;
           }
-
           shuffle(){
-            //console.log(this.deck)
-            let shuffled = [];
             let num = 52;
             while(this.deck.length > 0){
               let rand = Math.floor(Math.random() * (Math.floor(this.deck.length) - Math.ceil(0)) + Math.ceil(0));
-              //console.log(rand)
               let randCard = this.deck[rand];
-              //console.log(randCard)
-              shuffled.push({
+              this.shuffledDeck.push({
                 color: this.deck[rand].color,
                 val: this.deck[rand].val
               });
               this.deck.splice(rand, 1);              
             }
-            return shuffled;
           }
 
-          deal(players){
-
+          getShuffledDeck(){
+            return this.shuffledDeck;
           }
+          deal(players){}
       }
 
     //Player
@@ -82,6 +77,10 @@
   
           getCards(){
               return this.cards;
+          }
+
+          setCards(cards){
+            this.cards = cards;
           }
   
           getCurrentRoom(){
@@ -119,11 +118,10 @@
 
     //Game
       class Game {
-          constructor(players) {
+          constructor(players, deck) {
             this.players = players;
-            this.deck = new Deck();
-            this.cards = this.deck.create();
-            this.shuffledDeck = this.deck.shuffle();
+            this.deck = deck;
+            this.cards = this.deck
             this.currentTurn;
           }
       
@@ -137,6 +135,10 @@
             $(".notStarted").css("display", "none");
             $(".gameBoard").css("background-color", "green")
             $(".started").css("display", "flex");
+          }
+
+          dealToPlayers (num) {
+
           }
 
           getPlayers(){
@@ -292,7 +294,8 @@
             return;
           }
           else{
-            socket.emit('startGame', { room: player.getCurrentRoom() })
+            socket.emit('startGame', { room: player.getCurrentRoom(), game: game });
+            gameHasStarted=true;
           }
         })
       
@@ -371,6 +374,35 @@
           li.append(nameP)
           li.append(button);
           $("#player-list").append(li);
+        }
+      }
+    //Populate players cards
+      populateCards = (hand, ele) => {
+        if(ele === "#opponent-cards"){
+          for(let i = 0; i < hand.length; i++){
+            let div = document.createElement('div');
+            div.classList += 'card flipped';
+            let color = document.createElement('p');
+            let value = document.createElement('p');
+            div.append(color);
+            div.append(value);
+            $(ele).append(div);
+          }
+        }
+        else{
+          for(let i = 0; i < hand.length; i++){
+            let div = document.createElement('div');
+            div.classList += 'card';
+            let color = document.createElement('p');
+            let value = document.createElement('p');
+            color.textContent = hand[i].color;
+            value.textContent = hand[i].val;
+            div.style.backgroundColor = hand[i].color;
+            div.append(color);
+            div.append(value);
+            $(ele).append(div);
+            $("#draw-card").css("display", "flex")
+          }
         }
       }
 
@@ -546,35 +578,35 @@
             }
           })
       /**
-       * START GAME
+       * START GAME shit
        */
         socket.on('startGame', (data) => {
-          const { players } = data;
+          const { players, shuffled } = data;
           const name = player.getUsername();
           const order = player.getOrder()
-          game = new Game(players);
-
-
+          game = new Game(players, shuffled);
+          player.setCards(players[0].cards);
           const findObj = players.findIndex(item => item.order !== order);
-          //console.log(findObj)
-          
             if(order === findObj){
               $("#my-name").html(name);
               $("#opponent-name").html(players[findObj].username);
             }
             else{
               $("#my-name").html(`${players[order].username} (you)`);
-              $("#opponent-name").html(players[findObj].username);  
-          }
-          game.displayBoard();
-          //console.log(game);
+              $("#opponent-name").html(players[findObj].username); 
+            }
+            $("#my-cards").html(populateCards(players[0].cards, '#my-cards'))
+            $("#opponent-cards").html(populateCards(players[1].cards, '#opponent-cards'))
+          socket.emit('buildGame', { game: game, players, room: player.getCurrentRoom() })
+          game.displayBoard()
+          console.log(game);
         });
 
         socket.on('updateOthersStartGame', (data) => {
-          const { players } = data;
+          const { players, shuffled } = data;
+          player.setCards(players[1].cards);
           const name = player.getUsername();
-          game = new Game(players);
-          
+          game = new Game(players, shuffled);
           const findObj = players.findIndex(item => item.username === name);
           for(let i = 0; i < players.length; i++){
             if(i !== findObj){
@@ -588,11 +620,25 @@
               break;
             }
           }
-          console.log(`findobj: \n\n`)
-          console.log(findObj)
-          game.displayBoard();
-          //console.log(game);
+          $("#opponent-cards").html(populateCards(players[0].cards, '#opponent-cards'))
+          $("#my-cards").html(populateCards(players[1].cards, '#my-cards'))
+          socket.emit('buildGame', { game: game, players, room: player.getCurrentRoom() })
+          game.displayBoard()
+          console.log(game);
         })
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   //DECK MANIPULATION FUNCTIONS
     /**
@@ -670,16 +716,6 @@
             }
         });
 }());
-
-
-
-
-
-
-
-
-
-
 
 
 /**

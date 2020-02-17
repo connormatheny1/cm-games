@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>CM Games</title>
+		<link rel="stylesheet" href="main.css">
+		<link rel="stylesheet" href="node_modules/skeleton-css/css/skeleton.css">
+	</head>
+	<body>
+		<div class="container">
+            <nav id="topnav">
+                <ul id="leftnav">
+                    <li class="nav-items">
+                        <a href="/tic">
+                            Tic
+                        </a>
+                    </li>
+                    <li class="nav-items">
+                            <a href="/crazy">
+                                Tic
+                            </a>
+                        </li>
+                </ul>
+                <ul id="rightnav">
+                    <li class="nav-items">Login</li>
+                    <li class="nav-items">Register</li>
+                </ul>
+            </nav>
+			<div class="menu">
+				<h1>To games</h1>
+				<ol>
+					<li><a href="/tic">Tic Tac Toe</a></li>
+					<li><a href="/crazy">Crazy 8s</a></li>
+				</ol>
+			</div>
+		</div>
+		<script src="node_modules/jquery/dist/jquery.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	</body>
+</html>
