@@ -77,7 +77,7 @@ class Deck {
         // else{
         //     res.sendFile(path.join(__dirname, 'loggedIn.html'));
         // }
-        res.sendFile(path.join(__dirname, 'loggedIn.html'));
+        res.sendFile(path.join(__dirname, 'index.html'));
     });
 
     app.get('/tic', (req, res) => {
@@ -300,7 +300,7 @@ class Deck {
                 socket.broadcast.to(data.room).emit('updateOthersStartGame', { players, shuffled })
             });
 
-            
+
 
 
 
