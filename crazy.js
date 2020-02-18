@@ -12,19 +12,33 @@
           constructor(){
             this.total = 0;
             this.colors = ['red', 'green', 'yellow', 'blue'];
+            this.types = ['regular', 'special'];
+            this.cardActions = ['skip', 'reverse', 'draw2', 'draw4', '8']
             this.deck = [];
             this.shuffledDeck = [];
           }
           create(){
             for(let i = 0; i < this.colors.length; i++){
-              for(let j = 0; j < 13; j++){
+              for(let j = 1; j < 11; j++){
                 let card = {
                   color: this.colors[i],
-                  val: j+1
+                  val: j+1,
+                  type: 'regular',
+                  cardActions: null
                 }
                 this.deck.push(card);
               }
+              for(let k = 0; k < this.cardActions.length; k++){
+                let specialCard = {
+                  color: this.colors[i],
+                  val: this.cardActions[k],
+                  type: 'special',
+                  cardActions: this.cardActions[k]
+                }
+                this.deck.push(specialCard);
+              }           
             }
+            
             this.total = this.deck.length;
           }
           shuffle(){
@@ -43,7 +57,6 @@
           getShuffledDeck(){
             return this.shuffledDeck;
           }
-          deal(players){}
       }
 
     //Card
@@ -445,6 +458,9 @@
         }
       }
 
+  //GAMEPLAY UI INTERACTIONS
+      
+
   //UI UPDATES
     //ROOM CREATE, JOIN, LEAVE
       /**
@@ -701,6 +717,9 @@
             game.displayBoard();
             console.log(game);
           });
+
+
+
 
 
 
