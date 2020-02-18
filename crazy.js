@@ -4,9 +4,9 @@
       let gameHasStarted = false;
       let errors = [];
       let currentCard;
-      const socket = io.connect('http://localhost:5000/crazy');
+      //const socket = io.connect('http://localhost:5000/crazy');
       let player1;
-      //const socket = io.connect('https://cm-games.herokuapp.com/crazy');
+      const socket = io.connect('https://cm-games.herokuapp.com/crazy');
 
    //CLASS DECLARATIONS
     //Deck
