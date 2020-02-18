@@ -318,14 +318,14 @@ class Deck {
                         players,
                         shuffled,
                         firstTurn: players[0],
-                        num: 0,
+                        num: 1,
                         firstCard
                     });
                     socket.broadcast.to(data.room).emit('updateOthersStartGame', { 
                         players,
                         shuffled,
                         firstTurn: players[0],
-                        num: 0,
+                        num: 1,
                         firstCard
                     })
                 }
@@ -334,14 +334,14 @@ class Deck {
                         players,
                         shuffled, 
                         firstTurn: players[1],
-                        num: 1,
+                        num: 0,
                         firstCard
                     });
                     socket.broadcast.to(data.room).emit('updateOthersStartGame', {
                         players,
                         shuffled,
                         firstTurn: players[1],
-                        num: 1,
+                        num: 0,
                         firstCard
                     })
                 }
@@ -352,16 +352,28 @@ class Deck {
          */
             //Play card
             socket.on('playCard', (data) => {
-              const { ele, index, card, order, room } = data;
-              console.log('ele: ' + ele)
-              console.log('index: ' + index)
-              console.log('card: ' + card)
+              const { ele, index, card, order, room, p } = data;
               players[order].cards.splice(index, 1);
               players[order].currentTurn = false;
-              
+              if(players[order].cards.length === 0){
+                  socket.emit('gameWon', { winner: players[order].username })
+                  socket.broadcast.to(room).emit('updateOthersGameWon', { winner: players[order].username })
+              }
+              else{
+                socket.emit('cardPlayed', {ele, index, card, order, players});
+                socket.broadcast.to(room).emit('updateOthersCardPlayed', {ele, index, card, order, players})
+              }
+            });
 
-              socket.emit('cardPlayed', {ele, index, card, order, players});
-              socket.broadcast.to(room).emit('updateOthersCardPlayed', {ele, index, card, order, players})
+            //Draw card
+            socket.on('drawCard', (data) => {
+                const { ele, index, card, order, room, p, newDeck } = data;
+
+                players[order].cards.push(card);
+                players[order].currentTurn = false;
+
+                socket.emit('drewCard', { card, players, order, newDeck })
+                socket.broadcast.to(room).emit('updateOthersDrewCard', { card, players, order, newDeck })
             })
 
 
