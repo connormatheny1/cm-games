@@ -282,7 +282,7 @@ class Deck {
         /**
          * START GAME connections
          */
-            //Initial start game, updates UIs with board
+            //Initial start game, updates UIs with board, cards, current turn
             socket.on('startGame', (data) => {
                 let numOfPlayers = players.length;
                 deck = new Deck();
@@ -295,9 +295,43 @@ class Deck {
                         shuffled.splice(j, 1);
                     }
                 }
-                console.log(players);
-                socket.emit('startGame', { players, shuffled });
-                socket.broadcast.to(data.room).emit('updateOthersStartGame', { players, shuffled })
+                let firstCard = shuffled[0];
+                shuffled.splice(0, 1);
+                let randNum = Math.floor(Math.random() * (Math.floor(players.length) - Math.ceil(0)) + Math.ceil(0));
+                players[randNum].currentTurn = true;
+                console.log('rand: ' + randNum + '\n\n')
+                if(randNum == 0){
+                    socket.emit('startGame', {
+                        players,
+                        shuffled,
+                        firstTurn: players[0],
+                        num: 0,
+                        firstCard
+                    });
+                    socket.broadcast.to(data.room).emit('updateOthersStartGame', { 
+                        players,
+                        shuffled,
+                        firstTurn: players[0],
+                        num: 0,
+                        firstCard
+                    })
+                }
+                else if(randNum == 1){
+                    socket.emit('startGame', {
+                        players,
+                        shuffled, 
+                        firstTurn: players[1],
+                        num: 1,
+                        firstCard
+                    });
+                    socket.broadcast.to(data.room).emit('updateOthersStartGame', {
+                        players,
+                        shuffled,
+                        firstTurn: players[1],
+                        num: 1,
+                        firstCard
+                    })
+                }
             });
 
 

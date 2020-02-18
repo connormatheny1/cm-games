@@ -37,6 +37,9 @@
 					<div id="inprogress">
 						<p id="game-in-progress"></p>
 					</div>
+					<ul id="game-stats">
+						<li>Current turn: <span id="current-turn"></span></li>
+					</ul>
 				</div>
 				<div class="room-middle">
 					<div id="room-header">
@@ -62,10 +65,11 @@
 							</div>
 							<div class="game-section middle">
 								<div id="game-deck">
-									<div class="deck-display">Draw</div>
+									<div class="deck-display" id="unplayed-cards"></div>
 								</div>
 								<div id="played-cards">
-									<div class="deck-display">Played Cards</div>
+									<div class="deck-display" id="last-played">
+									</div>
 								</div>
 							</div>
 							<div class="game-section bottom">
@@ -75,6 +79,7 @@
 								<button id="draw-cards">Draw</button>
 								<div id="bottom-label">
 									<span id="my-name"></span>
+									<span id="your-turn">It's your turn</span>
 								</div>
 							</div>
 						</div>

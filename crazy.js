@@ -46,6 +46,12 @@
           deal(players){}
       }
 
+    //Card
+      class Card {
+        constructor(){}
+
+      }  
+
     //Player
       class Player {
           constructor(username, id, currentRoom) {
@@ -133,12 +139,19 @@
             $("#inprogress").css("display", "flex");
             $("#game-in-progress").html(`${message}`)
             $(".notStarted").css("display", "none");
-            $(".gameBoard").css("background-color", "green")
             $(".started").css("display", "flex");
           }
 
           dealToPlayers (num) {
 
+          }
+
+          getCurrentTurn(){
+            return this.currentTurn;
+          }
+
+          setCurrentTurn(ele){
+            this.currentTurn = ele;
           }
 
           getPlayers(){
@@ -406,6 +419,32 @@
         }
       }
 
+      populateFirstCard = (card) => {
+        let value = card.val;
+        let color = card.color;
+        let div = document.createElement('div');
+        let p = document.createElement('p');
+        let p1 = document.createElement('p');
+        p.textContent = color;
+        p1.textContent = value;
+        div.append(p);
+        div.append(p1);
+        $("#last-played").css("background-color", color);
+        $("#last-played").append(div);
+      }
+
+      populateUnplayedDeck = (cards) => {
+        for(let i = 0; i < cards.length; i++){
+          let div = document.createElement('div');
+          let p = document.createElement('p');
+          p.textContent = "DRAW";
+          div.append(p);
+          div.style.zIndex = ((cards.length + 1) - i);
+          $("#unplayed-cards").css("background-color", "purple");
+          $("#unplayed-cards").append(div)
+        }
+      }
+
   //UI UPDATES
     //ROOM CREATE, JOIN, LEAVE
       /**
@@ -580,13 +619,27 @@
       /**
        * START GAME shit
        */
-        socket.on('startGame', (data) => {
-          const { players, shuffled } = data;
-          const name = player.getUsername();
-          const order = player.getOrder()
-          game = new Game(players, shuffled);
-          player.setCards(players[0].cards);
-          const findObj = players.findIndex(item => item.order !== order);
+          //Update clients UI
+          socket.on('startGame', (data) => {
+            const { players, shuffled, firstTurn, num, firstCard } = data;
+            const name = player.getUsername();
+            const order = player.getOrder()
+            game = new Game(players, shuffled);
+            player.setCards(players[0].cards);
+
+            if(player.getUsername() === firstTurn.username){
+              player.setCurrentTurn(true);
+              $("#current-turn").html(player.getUsername())
+            }
+            else{
+              $("#current-turn").html(players[num].username)
+            }
+
+            if(player.getCurrentTurn()){
+              $("#your-turn").css("display", "inline")
+            }
+
+            const findObj = players.findIndex(item => item.order !== order);
             if(order === findObj){
               $("#my-name").html(name);
               $("#opponent-name").html(players[findObj].username);
@@ -595,37 +648,61 @@
               $("#my-name").html(`${players[order].username} (you)`);
               $("#opponent-name").html(players[findObj].username); 
             }
+            
             $("#my-cards").html(populateCards(players[0].cards, '#my-cards'))
-            $("#opponent-cards").html(populateCards(players[1].cards, '#opponent-cards'))
-          socket.emit('buildGame', { game: game, players, room: player.getCurrentRoom() })
-          game.displayBoard()
-          console.log(game);
-        });
+            $("#opponent-cards").html(populateCards(players[1].cards, '#opponent-cards'));
+            
+            populateFirstCard(firstCard);
+            populateUnplayedDeck(game.deck);
+            
+            game.displayBoard();
+            console.log(game);
+          });
 
-        socket.on('updateOthersStartGame', (data) => {
-          const { players, shuffled } = data;
-          player.setCards(players[1].cards);
-          const name = player.getUsername();
-          game = new Game(players, shuffled);
-          const findObj = players.findIndex(item => item.username === name);
-          for(let i = 0; i < players.length; i++){
-            if(i !== findObj){
-              $("#my-name").html(`${players[findObj].username} (you)`);
-              $("#opponent-name").html(players[i].username);
-              break;
+          //Update other players UI
+          socket.on('updateOthersStartGame', (data) => {
+            const { players, shuffled, firstTurn, num, firstCard } = data;
+            player.setCards(players[1].cards);
+            const name = player.getUsername();
+            game = new Game(players, shuffled);
+
+            if(player.getUsername() === firstTurn.username){
+              player.setCurrentTurn(true);
+              $("#current-turn").html(player.getUsername())
             }
             else{
-              $("#my-name").html(players[i].username);
-              $("#opponent-name").html(players[findObj].username);
-              break;
+              $("#current-turn").html(players[num].username)
             }
-          }
-          $("#opponent-cards").html(populateCards(players[0].cards, '#opponent-cards'))
-          $("#my-cards").html(populateCards(players[1].cards, '#my-cards'))
-          socket.emit('buildGame', { game: game, players, room: player.getCurrentRoom() })
-          game.displayBoard()
-          console.log(game);
-        })
+
+            if(player.getCurrentTurn()){
+              $("#your-turn").css("display", "inline")
+            }
+
+            const findObj = players.findIndex(item => item.username === name);
+            for(let i = 0; i < players.length; i++){
+              if(i !== findObj){
+                $("#my-name").html(`${players[findObj].username} (you)`);
+                $("#opponent-name").html(players[i].username);
+                break;
+              }
+              else{
+                $("#my-name").html(players[i].username);
+                $("#opponent-name").html(players[findObj].username);
+                break;
+              }
+            }
+
+            $("#opponent-cards").html(populateCards(players[0].cards, '#opponent-cards'))
+            $("#my-cards").html(populateCards(players[1].cards, '#my-cards'))
+
+            populateFirstCard(firstCard);
+            populateUnplayedDeck(game.deck);
+
+            game.displayBoard();
+            console.log(game);
+          });
+
+
 
 
 
