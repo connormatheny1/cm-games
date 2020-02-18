@@ -347,6 +347,23 @@ class Deck {
                 }
             });
 
+        /**
+         * GAMEPLAY
+         */
+            //Play card
+            socket.on('playCard', (data) => {
+              const { ele, index, card, order, room } = data;
+              console.log('ele: ' + ele)
+              console.log('index: ' + index)
+              console.log('card: ' + card)
+              players[order].cards.splice(index, 1);
+              players[order].currentTurn = false;
+              
+
+              socket.emit('cardPlayed', {ele, index, card, order, players});
+              socket.broadcast.to(room).emit('updateOthersCardPlayed', {ele, index, card, order, players})
+            })
+
 
 
 

@@ -4,6 +4,7 @@
       let gameHasStarted = false;
       let errors = [];
       //const socket = io.connect('http://localhost:5000/crazy');
+      let currentCard;
       const socket = io.connect('https://cm-games.herokuapp.com/crazy');
 
    //CLASS DECLARATIONS
@@ -416,14 +417,24 @@
           }
         }
         else{
-          for(let i = 0; i < hand.length; i++){
+          for(let j = 0; j < hand.length; j++){
             let div = document.createElement('div');
             div.classList += 'card';
+            if(hand[j].val == currentCard.val || hand[j].color == currentCard.color){
+              div.classList += ' playable';
+              div.addEventListener("click", function(e){
+                const ele = e.target || e.srcElement
+                playCard(ele, j);
+              })
+            }
+            else{
+              div.classList += ' unplayable';
+            }
             let color = document.createElement('p');
             let value = document.createElement('p');
-            color.textContent = hand[i].color;
-            value.textContent = hand[i].val;
-            div.style.backgroundColor = hand[i].color;
+            color.textContent = hand[j].color;
+            value.textContent = hand[j].val;
+            div.style.backgroundColor = hand[j].color;
             div.append(color);
             div.append(value);
             $(ele).append(div);
@@ -459,7 +470,18 @@
       }
 
   //GAMEPLAY UI INTERACTIONS
-      
+      playCard = (ele, index) => {
+        console.log(ele)
+        console.log(index)
+        socket.emit("playCard", {
+          ele,
+          index, 
+          card: player.getCards()[index],
+          order: player.getOrder(),
+          room: player.getCurrentRoom()
+        });
+        player.setCurrentTurn(false);
+      }
 
   //UI UPDATES
     //ROOM CREATE, JOIN, LEAVE
@@ -642,6 +664,9 @@
             const order = player.getOrder()
             game = new Game(players, shuffled);
             player.setCards(players[0].cards);
+            console.log(players);
+            console.log(players[0].cards)
+            currentCard = firstCard;
 
             if(player.getUsername() === firstTurn.username){
               player.setCurrentTurn(true);
@@ -669,7 +694,7 @@
             $("#opponent-cards").html(populateCards(players[1].cards, '#opponent-cards'));
             
             populateFirstCard(firstCard);
-            populateUnplayedDeck(game.deck);
+            populateUnplayedDeck(game.deck);           
             
             game.displayBoard();
             console.log(game);
@@ -681,6 +706,7 @@
             player.setCards(players[1].cards);
             const name = player.getUsername();
             game = new Game(players, shuffled);
+            currentCard = firstCard;
 
             if(player.getUsername() === firstTurn.username){
               player.setCurrentTurn(true);
@@ -713,10 +739,53 @@
 
             populateFirstCard(firstCard);
             populateUnplayedDeck(game.deck);
-
+            
             game.displayBoard();
             console.log(game);
           });
+
+      /**
+       * GAMEPLAY UI UPDATES
+       */
+          //Card Played
+          socket.on('cardPlayed', (data) => {
+            const { ele, index, card, players, order } = data;
+            currentCard = card;
+
+            console.log(players)
+            player.setCurrentTurn(false);
+            $("#your-turn").css("display", "none")
+
+            //$("#current-turn").html(players[1].username)
+            
+            
+            $("#opponent-cards").empty();
+            $("#my-cards").empty()
+            $("#my-cards").html(populateCards(players[0].cards, '#my-cards'))
+            $("#opponent-cards").html(populateCards(players[1].cards, '#opponent-cards'));
+            $("#last-played").empty()
+            populateFirstCard(currentCard);
+
+          });
+
+          socket.on('updateOthersCardPlayed', (data) => {
+            const { ele, index, card, players, order } = data;
+            currentCard = card;
+
+            player.setCurrentTurn(true);
+            $("#your-turn").css("display", "inline")
+            //$("#current-turn").html()
+
+            $("#my-cards").empty()
+            $("#opponent-cards").empty();
+            $("#opponent-cards").html(populateCards(players[0].cards, '#opponent-cards'))
+            $("#my-cards").html(populateCards(players[1].cards, '#my-cards'))
+            $("#last-played").empty()
+            populateFirstCard(currentCard);
+
+          })
+
+
 
 
 

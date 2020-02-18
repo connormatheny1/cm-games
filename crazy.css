@@ -4,6 +4,7 @@ button{
 
 body{
     margin: 0;
+    z-index: 0;
 }
 
 .table{
@@ -27,7 +28,9 @@ body{
     align-items: center;
     flex-direction: column;
     border: 1px solid #333;
-    margin-right: 2px;
+    margin-right: 6px;
+    position: relative;
+    border-radius: 4px;
 }
 
 .card * {
@@ -54,6 +57,8 @@ body{
     align-items: center;
     border-bottom: 2px solid #3b55cd;
     height: 47px;
+    z-index: 2;
+    background-color: #fff;
 }
 
 #room-header > *{
@@ -67,6 +72,7 @@ body{
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
+    z-index: 0;
 }
 
 #room-header div{
@@ -294,6 +300,7 @@ body{
     height: 100%;
     padding: 0px;
     box-sizing: border-box;
+    z-index: 1;
 }
 
 .gameBoard .notStarted{
@@ -324,6 +331,12 @@ body{
     align-items: center;
 }
 
+.game-section:first-child{
+    flex-direction: column-reverse;
+    position: relative;
+    top: -120px;
+}
+
 #top-label, #bottom-label{
     width: 100%;
     height: 30px;
@@ -344,7 +357,7 @@ body{
 
 #opponent-card-cont, #my-card-cont{
     width: 100%;
-    height: 90%;
+    height: 70%;
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -354,7 +367,7 @@ body{
 
 #opponent-cards, #my-cards{
     width: 85%;
-    height: 85%;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -368,6 +381,7 @@ body{
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    height: 25%;
 }
 
 #game-deck{
@@ -478,4 +492,39 @@ button#start-game.enabled{
     font-weight: bold;
     font-size: 18px;
     text-align: center;
+}
+
+.game-section.bottom{
+    height: 40%;
+    justify-content: space-between;
+}
+
+#my-cards .card.playable{
+    transition: all .3s;
+}
+
+#my-cards .card.playable::after{
+    content: '^^';
+    width: 15px;
+    height: 14px;
+    font-size: 12px;
+    color: #fff;
+    background-color: #000;
+    text-align: center;
+    position: absolute;;
+    bottom: -15px;
+    left: calc(50% - 7.5px);
+}
+
+#my-cards .card.playable:hover{
+    box-shadow: 6px 5px 8px 2px;
+    transition: all .3s;
+}
+
+#my-cards .card.playable:hover .card.playable::after{
+    box-shadow: 6px 5px 8px 2px
+}
+
+#my-cards .card.unplayable{
+    opacity: 40%;
 }
