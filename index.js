@@ -36,17 +36,19 @@ class Deck {
             cardActions: null
           }
           this.deck.push(card);
-        }
-        for(let k = 0; k < this.cardActions.length; k++){
-          let specialCard = {
-            color: this.colors[i],
-            val: this.cardActions[k],
-            type: 'special',
-            cardActions: this.cardActions[k]
-          }
-          this.deck.push(specialCard);
-        }           
+        }         
       }
+      for(let i = 0; i < this.colors.length; i++){
+      for(let k = 0; k < this.cardActions.length; k++){
+        let specialCard = {
+          color: this.colors[i],
+          val: this.cardActions[k],
+          type: 'special',
+          cardActions: this.cardActions[k]
+        }
+        this.deck.push(specialCard);
+      }
+    }
       
       this.total = this.deck.length;
     }

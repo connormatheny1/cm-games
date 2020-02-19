@@ -367,7 +367,7 @@
           for(let j = 0; j < hand.length; j++){
             let div = document.createElement('div');
             div.classList += 'card';
-            if(hand[j].val == currentCard.val || hand[j].color == currentCard.color){
+            if(hand[j].val === currentCard.val || hand[j].color === currentCard.color){
               div.classList += ' playable';
               div.addEventListener("click", function(e){
                 const ele = e.target || e.srcElement;
