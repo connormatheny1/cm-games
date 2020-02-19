@@ -4,64 +4,13 @@
       let gameHasStarted = false;
       let errors = [];
       let currentCard;
-      //const socket = io.connect('http://localhost:5000/crazy');
       let player1;
+      //const socket = io.connect('http://localhost:5000/crazy');
       const socket = io.connect('https://cm-games.herokuapp.com/crazy');
 
    //CLASS DECLARATIONS
     //Deck
-      class Deck {
-          constructor(){
-            this.total = 0;
-            this.colors = ['red', 'green', 'yellow', 'blue'];
-            this.types = ['regular', 'special'];
-            this.cardActions = ['skip', 'reverse', 'draw2', 'draw4', '8']
-            this.deck = [];
-            this.shuffledDeck = [];
-          }
-          create(){
-            for(let i = 0; i < this.colors.length; i++){
-              for(let j = 1; j < 11; j++){
-                let card = {
-                  color: this.colors[i],
-                  val: j+1,
-                  type: 'regular',
-                  cardActions: null
-                }
-                this.deck.push(card);
-              }
-              for(let k = 0; k < this.cardActions.length; k++){
-                let specialCard = {
-                  color: this.colors[i],
-                  val: this.cardActions[k],
-                  type: 'special',
-                  cardActions: this.cardActions[k]
-                }
-                this.deck.push(specialCard);
-              }           
-            }
-            
-            this.total = this.deck.length;
-          }
-          shuffle(){
-            let num = 52;
-            while(this.deck.length > 0){
-              let rand = Math.floor(Math.random() * (Math.floor(this.deck.length) - Math.ceil(0)) + Math.ceil(0));
-              let randCard = this.deck[rand];
-              this.shuffledDeck.push({
-                color: this.deck[rand].color,
-                val: this.deck[rand].val
-              });
-              this.deck.splice(rand, 1);              
-            }
-          }
-
-          getShuffledDeck(){
-            return this.shuffledDeck;
-          }
-      }
-
-    //Card
+      
       class Card {
         constructor(){}
 
@@ -100,8 +49,12 @@
               return this.cards;
           }
 
-          setCards(cards){
-            this.cards = cards;
+          addCard(o){
+            this.cards.push(o);
+          }
+
+          setCards(newCards){
+            this.cards = newCards;
           }
   
           getCurrentRoom(){
@@ -176,40 +129,22 @@
           setPlayers(players){
             this.players = players
           }
-          /**
-           * Update game board UI
-           */
-          updateBoard(type, row, col, tile) {
-          
-          }
 
           getDeck(){
             return this.deck;
           }
 
+          getGameCards(){
+            return this.cards;
+          }
+
+          setGameCards(a){
+            this.cards = null;
+            this.cards = a;
+          }
+
           setDeck(p){
             this.deck = p;
-          }
-      
-          // Send an update to the opponent to update their UI's tile
-          playTurn() {      
-          // Emit an event to update other player that you've played your turn.
-          socket.emit('playTurn', {
-              tile: clickedTile,
-              room: this.getRoomId(),
-          });
-          }
-          checkWinner() {
-          const currentPlayerPositions = player.getPlaysArr();
-      
-          Player.wins.forEach((winningPosition) => {
-              if ((winningPosition & currentPlayerPositions) === winningPosition) {
-              game.announceWinner();
-              }
-          });
-          }
-      
-          checkTie() {
           }
       
           // Announce the winner if the current client has won. 
@@ -416,6 +351,7 @@
       populateCards = (hand, ele) => {
         let playables = 0;
         if(ele === "#opponent-cards"){
+          $("#opponent-cards").empty()
           for(let i = 0; i < hand.length; i++){
             let div = document.createElement('div');
             div.classList += 'card flipped';
@@ -427,6 +363,7 @@
           }
         }
         else{
+          $("#my-cards").empty()
           for(let j = 0; j < hand.length; j++){
             let div = document.createElement('div');
             div.classList += 'card';
@@ -460,9 +397,7 @@
             $("#unplayed-cards").first().addClass("playable");
             $("#unplayed-cards").first().on("click", (e) => {
               const ele = e.target || e.srcElement
-             
               drawCard(ele, player.getUsername());
-
             });
           }
         }
@@ -483,6 +418,7 @@
       }
 
       populateUnplayedDeck = (cards) => {
+        $("#unplayed-cards").empty()
         for(let i = 0; i < cards.length; i++){
           
           let div = document.createElement('div');
@@ -514,16 +450,24 @@
       }
 
       drawCard = (ele, p) => {
+        let car = game.cards[0];
+        player.addCard(game.cards[0])
+        console.log(game.cards[0]);
+        console.log(player.getCards())
+        player.setCurrentTurn(false);
+        game.cards.splice(0, 1);
+        $("#my-cards").empty();
+        populateCards(player.getCards(), "#my-cards");
+        populateUnplayedDeck(game.cards)
+        $("#your-turn").css("display", "none");
         socket.emit("drawCard", {
           ele,
-          card: game.deck[0],
+          card: car,
           order: player.getOrder(),
           room: player.getCurrentRoom(),
-          newDeck: game.deck.splice(0, 1),
+          newDeck: game.cards,
           p: p
         });
-        player.setCurrentTurn(false);
-        game.deck.splice(0, 1);
       }
 
   //UI UPDATES
@@ -839,36 +783,36 @@
               other = 0;
             }
             player.setCards(players[other].cards)
-            $("#my-cards").empty();
+            //("#my-cards").empty();
             $("#opponent-cards").empty()
-            $("#my-cards").html(populateCards(player.getCards(), "#my-cards"));
+            //$("#my-cards").html(populateCards(player.getCards(), "#my-cards"));
             $("#opponent-cards").html(populateCards(players[order].cards, "#opponent-cards"));
             $("#last-played").empty()
             populateFirstCard(card);
           });
 
-          socket.on("drewCard", (data) => {
-            const { card, players, order, newDeck } = data;
-            player.setCurrentTurn(false);
-            player.setCards(players[order].cards);
-            game.setDeck(newDeck)
-            $("#your-turn").css("display", "none")
-            let other;
-            if(order === 0){
-              other = 1
-            }
-            else{
-              other = 0;
-            }
+          // socket.on("drewCard", (data) => {
+          //   const { card, players, order, newDeck } = data;
+          //   player.setCurrentTurn(false);
+          //   //player.setCards(players[order].cards);
+          //   game.setDeck(newDeck)
+          //   $("#your-turn").css("display", "none")
+          //   let other;
+          //   if(order === 0){
+          //     other = 1
+          //   }
+          //   else{
+          //     other = 0;
+          //   }
 
-            $("#my-cards").empty()
-            $("#opponent-cards").empty()
-            $("#my-cards").html(populateCards(player.getCards(), "#my-cards"));
-            $("#opponent-cards").html(populateCards(players[other].cards, "#opponent-cards"));
-            $("#last-played").empty()
-            populateUnplayedDeck(game.deck);
-            populateFirstCard(currentCard);
-          })
+          //   $("#my-cards").empty()
+          //   $("#opponent-cards").empty()
+          //   $("#my-cards").html(populateCards(player.getCards(), "#my-cards"));
+          //   $("#opponent-cards").html(populateCards(players[other].cards, "#opponent-cards"));
+          //   $("#last-played").empty()
+          //   populateUnplayedDeck(game.deck);
+          //   populateFirstCard(currentCard);
+          // })
 
           socket.on("updateOthersDrewCard", (data) => {
             const { card, players, order, newDeck } = data;
@@ -882,12 +826,15 @@
             else{
               other = 0;
             }
-            player.setCards(players[other].cards)
+            //player.setCards(players.cards)
             $("#my-cards").empty();
-            $("#opponent-cards").empty()
+            
             $("#my-cards").html(populateCards(player.getCards(), "#my-cards"));
-            $("#opponent-cards").html(populateCards(players[order].cards, "#opponent-cards"));
+            console.log(players.cards)
+            //$("#opponent-cards").empty()
+            //$("#opponent-cards").html(populateCards(players.cards, "#opponent-cards"));
             $("#last-played").empty()
+            $("#unplayed-cards").empty();
             populateUnplayedDeck(game.deck);
             populateFirstCard(currentCard);
           })

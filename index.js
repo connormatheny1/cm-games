@@ -22,7 +22,7 @@ class Deck {
       this.total = 0;
       this.colors = ['red', 'green', 'yellow', 'blue'];
       this.types = ['regular', 'special'];
-      this.cardActions = ['skip', 'reverse', 'draw2', 'draw4', '8']
+      this.cardActions = ['skip', 'reverse', 'draw2', 'draw4', 'eight']
       this.deck = [];
       this.shuffledDeck = [];
     }
@@ -369,11 +369,11 @@ class Deck {
             socket.on('drawCard', (data) => {
                 const { ele, index, card, order, room, p, newDeck } = data;
 
-                players[order].cards.push(card);
+                //players[order].cards.push(card);
                 players[order].currentTurn = false;
 
-                socket.emit('drewCard', { card, players, order, newDeck })
-                socket.broadcast.to(room).emit('updateOthersDrewCard', { card, players, order, newDeck })
+                //socket.emit('drewCard', { card, players, order, newDeck })
+                socket.broadcast.to(room).emit('updateOthersDrewCard', { card, players: players[order], order, newDeck })
             })
 
 
