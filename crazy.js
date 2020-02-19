@@ -536,7 +536,7 @@
           p: p
         });
         player.setCurrentTurn(false);
-        currentCard = card;
+        currentCard = player.getCards()[index];
         
       }
 
