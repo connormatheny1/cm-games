@@ -67,7 +67,7 @@ class Deck {
 
     getShuffledDeck(){
       return this.shuffledDeck;
-      
+
     }
 }
 /**
@@ -379,54 +379,33 @@ class Deck {
                 socket.broadcast.to(room).emit('updateOthersDrewCard', { card, players: players[order], order, newDeck })
             })
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         /**
-         * CERTAINLY NEEDS WORK
+         * LEAVE ROOM
+         * Leave a room either by hitting leave room button, or by disconnecting
          * On player disconnection, or leaveRoom button clicked, emit disconnect
          * emit updateOtherRoomsAfterJoin, pass in players Arr
          */
             socket.on('leave', (data) => {
                 const { username, order, socketId, room, buttonId } = data;
                 const findObj = players.findIndex(item => item.socketId === socket.id);
-                if(findObj > 0){
-                    if(players[findObj].socketId === socket.id){
-                        players.slice(findObj, 1);
-                        socket.emit('leaveRoom', { players })
-                        socket.broadcast.to(data.room).emit('updatePlayersAfterLeave', { players });
-                    }
-                    else{
-                        socket.emit('err', { type: 'failedValidation', message: 'error thrown on check username when removing from server side players []'})
-                    }
-                }
-                else{
-                    socket.emit('err', { type: 'indexOutOfBounds', message: 'couldn\'t find correct object in players []'})
-                }
-                // let index;
-                // for(let i = 0; i < players.length; i++){
-                //     if(players[i].username === data.name){
-                //         index = i;
-                //     }
-                // }
-                // players.splice(index, 1);
-                // socket.broadcast.to(data.room).emit('updatePlayersAfterLeave', { players });
+                console.log(players)
+                players.splice(order, 1);
+                console.log(players)
+                socket.leave(room);
+                socket.broadcast.to(room).emit("updatePlayerLeft", { players })
             });
 
             socket.on('disconnect', (data) => {
-                console.log(`${socket.id} disconnected`)
+                console.log(`${socket.id} disconnected`);
+                const findObj = players.findIndex(item => item.socketId === socket.id);
+                if(findObj >= 0){
+                    console.log(findObj)
+                    let room = players[findObj].currentRoom
+                    players.splice(findObj, 1);
+                    console.log(players)
+                    console.log(findObj)
+                    socket.broadcast.to(room).emit("updatePlayerLeft", { players })
+                }
             })
     });
  

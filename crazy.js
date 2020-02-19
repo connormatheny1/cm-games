@@ -49,7 +49,7 @@
               return this.cards;
           }
 
-          
+
           addCard(o){
             this.cards.push(o);
           }
@@ -269,7 +269,26 @@
             socket.emit('startGame', { room: player.getCurrentRoom(), game: game });
             gameHasStarted=true;
           }
-        })
+        });
+
+      /**
+       * LEAVE A ROOM
+       * Leave a room on leave room button click, 
+       * emit UI update to remove from player list in other socket clients
+       */
+        $("#leave-room").on("click", () => {
+            socket.emit('leave', {
+              username: player.getUsername(),
+              order: player.getOrder(),
+              socketId: player.getSocketId(),
+              room: player.getCurrentRoom()
+            });
+            $("#player-list").empty();
+            $('.menu').css('display', 'block');
+            $('.room').css('display', 'none');
+            
+        });
+      
       
   //¿HELPER FUNCTIONS?
     //Build ready players list
@@ -285,67 +304,136 @@
       }
     //Build the player list
       createPlayerElement = (data) => {
+        console.log(data)
         const { players } = data;
-        for(let i = 0; i < players.length; i++){
-          let name = players[i].username;
-          let status = players[i].ready ? "Ready" : "Join";
-          let li = document.createElement('li');
-          li.classList += "player-item";
-          let iconDiv = document.createElement('div');
-          iconDiv.classList += "player-icon";
-          let div = document.createElement('div');
-          let nameP = document.createElement('p');
-          nameP.classList += "player-item-name";
-          nameP.innerHTML = `${players[i].username}`;
-          let button = document.createElement('button');
-          button.classList += "status-text";
-          button.id = players[i].order;
-          button.innerHTML = status;
-          button.addEventListener("click", function(ele){
-            if(!players[i].ready){
-              socket.emit('playerReady', {
-                ele,
-                username: player.getUsername(),
-                order: player.getOrder(),
-                socketId: player.getSocketId(),
-                room: player.getCurrentRoom(),
-                buttonId: ele.target.attributes[1].value
-              });
-              console.log(player.getOrder());
-              console.log(ele.target.attributes[1].value)
+        console.log(players)
+
+        if(data.length <= 1){
+          for(let i = 0; i < data.length; i++){
+            let name = data[i].username;
+            let status = data[i].ready ? "Ready" : "Join";
+            let li = document.createElement('li');
+            li.classList += "player-item";
+            let iconDiv = document.createElement('div');
+            iconDiv.classList += "player-icon";
+            let div = document.createElement('div');
+            let nameP = document.createElement('p');
+            nameP.classList += "player-item-name";
+            nameP.innerHTML = `${data[i].username}`;
+            let button = document.createElement('button');
+            button.classList += "status-text";
+            button.id = data[i].order;
+            button.innerHTML = status;
+            button.addEventListener("click", function(ele){
+              if(!data[i].ready){
+                socket.emit('playerReady', {
+                  ele,
+                  username: player.getUsername(),
+                  order: player.getOrder(),
+                  socketId: player.getSocketId(),
+                  room: player.getCurrentRoom(),
+                  buttonId: ele.target.attributes[1].value
+                });
+                console.log(player.getOrder());
+                console.log(ele.target.attributes[1].value)
+              }
+              else{
+                socket.emit('playerUnready', {
+                  username: player.getUsername(),
+                  order: player.getOrder(),
+                  socketId: player.getSocketId(),
+                  room: player.getCurrentRoom(),
+                  buttonId: ele.target.attributes[1].value
+                });
+                console.log(player.getOrder());
+                console.log(ele.target.attributes[1].value)
+              }
+            });
+  
+            if(data[i].ready){
+              if(!button.classList.contains('playerReady')){
+                button.classList += ' playerReady'
+              }
+              else{
+                button.classList.remove('playerReady')
+              }
             }
             else{
-              socket.emit('playerUnready', {
-                username: player.getUsername(),
-                order: player.getOrder(),
-                socketId: player.getSocketId(),
-                room: player.getCurrentRoom(),
-                buttonId: ele.target.attributes[1].value
-              });
-              console.log(player.getOrder());
-              console.log(ele.target.attributes[1].value)
+              if(button.classList.contains('playerReady')){
+                button.classList.remove('playerReady')
+              }
             }
-          });
+  
+            iconDiv.append(div)
+            li.append(iconDiv)
+            li.append(nameP)
+            li.append(button);
+            $("#player-list").append(li);
+          }
+        }
+        else{
+          console.log(data.length)
+          for(let i = 0; i < players.length; i++){
+            let name = players[i].username;
+            let status = players[i].ready ? "Ready" : "Join";
+            let li = document.createElement('li');
+            li.classList += "player-item";
+            let iconDiv = document.createElement('div');
+            iconDiv.classList += "player-icon";
+            let div = document.createElement('div');
+            let nameP = document.createElement('p');
+            nameP.classList += "player-item-name";
+            nameP.innerHTML = `${players[i].username}`;
+            let button = document.createElement('button');
+            button.classList += "status-text";
+            button.id = players[i].order;
+            button.innerHTML = status;
+            button.addEventListener("click", function(ele){
+              if(!players[i].ready){
+                socket.emit('playerReady', {
+                  ele,
+                  username: player.getUsername(),
+                  order: player.getOrder(),
+                  socketId: player.getSocketId(),
+                  room: player.getCurrentRoom(),
+                  buttonId: ele.target.attributes[1].value
+                });
+                console.log(player.getOrder());
+                console.log(ele.target.attributes[1].value)
+              }
+              else{
+                socket.emit('playerUnready', {
+                  username: player.getUsername(),
+                  order: player.getOrder(),
+                  socketId: player.getSocketId(),
+                  room: player.getCurrentRoom(),
+                  buttonId: ele.target.attributes[1].value
+                });
+                console.log(player.getOrder());
+                console.log(ele.target.attributes[1].value)
+              }
+            });
 
-          if(players[i].ready){
-            if(!button.classList.contains('playerReady')){
-              button.classList += ' playerReady'
+            if(players[i].ready){
+              if(!button.classList.contains('playerReady')){
+                button.classList += ' playerReady'
+              }
+              else{
+                button.classList.remove('playerReady')
+              }
             }
             else{
-              button.classList.remove('playerReady')
+              if(button.classList.contains('playerReady')){
+                button.classList.remove('playerReady')
+              }
             }
-          }
-          else{
-            if(button.classList.contains('playerReady')){
-              button.classList.remove('playerReady')
-            }
-          }
 
-          iconDiv.append(div)
-          li.append(iconDiv)
-          li.append(nameP)
-          li.append(button);
-          $("#player-list").append(li);
+            iconDiv.append(div)
+            li.append(iconDiv)
+            li.append(nameP)
+            li.append(button);
+            $("#player-list").append(li);
+          }
         }
       }
     //Populate players cards
@@ -840,7 +928,20 @@
             $("#unplayed-cards").empty();
             populateUnplayedDeck(game.deck);
             populateFirstCard(currentCard);
-          })
+          });
+
+
+
+    /**
+     * LEAVE ROOM
+     */
+      socket.on("updatePlayerLeft", (data) => {
+        const { players } = data;
+        console.log(players);
+        $("#actual-num").html(players.length);
+        $("#player-list").empty();
+        createPlayerElement(players);
+      })
 
     /**
      * GAME WON
@@ -929,16 +1030,4 @@
         });
     */
 
-     /**
-       * LEAVE A ROOM
-       * Leave a room on leave room button click, 
-       * emit UI update to remove from player list in other socket clients
-        $("#leave-room").on("click", () => {
-            socket.emit('leave', {
-              username: player.getUsername(),
-              order: player.getOrder(),
-              socketId: player.getSocketId(),
-              room: player.getCurrentRoom()
-            });
-        });
-      */
+     
