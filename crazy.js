@@ -447,6 +447,8 @@
           p: p
         });
         player.setCurrentTurn(false);
+        currentCard = card;
+        
       }
 
       drawCard = (ele, p) => {
