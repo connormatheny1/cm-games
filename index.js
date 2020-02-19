@@ -67,6 +67,7 @@ class Deck {
 
     getShuffledDeck(){
       return this.shuffledDeck;
+      
     }
 }
 /**

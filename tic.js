@@ -57,6 +57,7 @@
         this.moves = 0;
       }
   
+  
       // Create the Game board by attaching event listeners to the buttons.
       createGameBoard() {
         function tileClickHandler() {
