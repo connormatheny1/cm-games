@@ -517,7 +517,7 @@ button#start-game.enabled{
     left: calc(50% - 7.5px);
 }
 
-#unplayed-cards.playable::after{
+#unplayed-cards .drawable::after{
     content: '^^';
     width: 15px;
     height: 14px;
@@ -530,7 +530,7 @@ button#start-game.enabled{
     left: calc(50% - 7.5px);
 }
 
-#unplayed-cards.playable:hover{
+#unplayed-cards .drawable:hover{
     box-shadow: 6px 5px 8px 2px;
     transition: all .3s;
 }

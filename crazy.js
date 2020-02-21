@@ -54,6 +54,10 @@
             this.cards.push(o);
           }
 
+          playCard(i){
+            this.cards.splice(i, 1);
+          }
+
           setCards(newCards){
             this.cards = newCards;
           }
@@ -133,6 +137,12 @@
 
           getDeck(){
             return this.deck;
+          }
+
+          drawCard(){
+            let r = this.deck[0]
+            this.deck.splice(0, 1);
+            return r;
           }
 
           getGameCards(){
@@ -438,10 +448,9 @@
       }
     //Populate players cards
       populateCards = (hand, ele) => {
-        let playables = 0;
         if(ele === "#opponent-cards"){
           $("#opponent-cards").empty()
-          for(let i = 0; i < hand.length; i++){
+          if(hand.length == 1 || null){
             let div = document.createElement('div');
             div.classList += 'card flipped';
             let color = document.createElement('p');
@@ -450,45 +459,85 @@
             div.append(value);
             $(ele).append(div);
           }
+          else{
+            for(let i = 0; i < hand.length; i++){
+              let div = document.createElement('div');
+              div.classList += 'card flipped';
+              let color = document.createElement('p');
+              let value = document.createElement('p');
+              div.append(color);
+              div.append(value);
+              $(ele).append(div);
+            }
+          }
         }
         else{
-          $("#my-cards").empty()
-          for(let j = 0; j < hand.length; j++){
+          $("#my-cards").empty();
+          if(hand.length === 0 || null){
             let div = document.createElement('div');
-            div.classList += 'card';
-            if(hand[j].val === currentCard.val || hand[j].color === currentCard.color){
-              div.classList += ' playable';
-              div.addEventListener("click", function(e){
-                const ele = e.target || e.srcElement;
-                if(!player.getCurrentTurn()){
-                  alert('not your turn')
-                }
-                else{
-                  playCard(ele, j, player.getUsername());
-                }
-              })
-              playables++;
-            }
-            else{
-              div.classList += ' unplayable';
-            }
-            let color = document.createElement('p');
-            let value = document.createElement('p');
-            color.textContent = hand[j].color;
-            value.textContent = hand[j].val;
-            div.style.backgroundColor = hand[j].color;
-            div.append(color);
-            div.append(value);
-            $(ele).append(div);
-            $("#draw-card").css("display", "flex")
+              div.classList += 'card';
+              if(hand.val === currentCard.val || hand.color === currentCard.color){
+                div.classList += ' playable';
+                div.addEventListener("click", function(e){
+                  const ele = e.target || e.srcElement;
+                  if(!player.getCurrentTurn()){
+                    alert('not your turn')
+                  }
+                  else{
+                    playCard(ele, j, player.getUsername());
+                  }
+                })
+              }
+              else{
+                div.classList += ' unplayable';
+              }
+              let color = document.createElement('p');
+              let value = document.createElement('p');
+              color.textContent = hand.color;
+              value.textContent = hand.val;
+              div.style.backgroundColor = hand.color;
+              div.append(color);
+              div.append(value);
+              $(ele).append(div);
+              $("#draw-card").css("display", "flex")
           }
-          if(playables === 0){
-            $("#unplayed-cards").first().addClass("playable");
-            $("#unplayed-cards").first().on("click", (e) => {
-              const ele = e.target || e.srcElement
-              drawCard(ele, player.getUsername());
-            });
+          else{
+            for(let j = 0; j < hand.length; j++){
+              let div = document.createElement('div');
+              div.classList += 'card';
+              if(hand[j].val === currentCard.val || hand[j].color === currentCard.color){
+                div.classList += ' playable';
+                div.addEventListener("click", function(e){
+                  const ele = e.target || e.srcElement;
+                  if(!player.getCurrentTurn()){
+                    alert('not your turn')
+                  }
+                  else{
+                    playCard(ele, j, player.getUsername());
+                  }
+                })
+              }
+              else{
+                div.classList += ' unplayable';
+              }
+              let color = document.createElement('p');
+              let value = document.createElement('p');
+              color.textContent = hand[j].color;
+              value.textContent = hand[j].val;
+              div.style.backgroundColor = hand[j].color;
+              div.append(color);
+              div.append(value);
+              $(ele).append(div);
+              $("#draw-card").css("display", "flex")
+            }
           }
+          // if(playables === 0){
+          //   $("#unplayed-cards").first().addClass("playable");
+          //   $("#unplayed-cards").first().on("click", (e) => {
+          //     const ele = e.target || e.srcElement
+          //     drawCard(ele, player.getUsername());
+          //   });
+          // }
         }
       }
 
@@ -515,8 +564,17 @@
           p.textContent = "DRAW";
           div.append(p);
           div.style.zIndex = ((cards.length + 1) - i);
-          if(i == 0){
-            div.classList += " playable"
+          if(i === 0){
+            div.classList += "drawable";
+            div.addEventListener("click", function(e){
+              const ele = e.target || e.srcElement;
+              if(!player.getCurrentTurn()){
+                alert('not your turn')
+              }
+              else{
+                drawCard(ele, i, player.getUsername());
+              }
+            })
           }
           $("#unplayed-cards").css("background-color", "purple");
           $("#unplayed-cards").append(div)
@@ -524,39 +582,47 @@
       }
 
   //GAMEPLAY UI INTERACTIONS
-      playCard = (ele, index, p) => {
+      playCard = (ele, index, p, card) => {
         console.log(ele)
         console.log(index)
+        currentCard = player.getCards()[index];
+        const newCard = currentCard;
+        console.log(currentCard)
         socket.emit("playCard", {
           ele,
           index, 
-          card: player.getCards()[index],
+          newCard,
           order: player.getOrder(),
           room: player.getCurrentRoom(),
           p: p
         });
+        player.playCard(index);
         player.setCurrentTurn(false);
-        currentCard = player.getCards()[index];
-        
+        $("#your-turn").css("display", "none")
+        $("#my-cards").html(populateCards(player.getCards(), "#my-cards"));
+        $("#last-played").empty()
+        populateFirstCard(currentCard);
       }
 
       drawCard = (ele, p) => {
-        let car = game.cards[0];
-        player.addCard(game.cards[0])
-        console.log(game.cards[0]);
+        if(game.deck.length === 1){
+          socket.emit('replenishDeck');
+        }
+
+        let c = game.drawCard();
+        player.addCard(c)
+        console.log(c);
         console.log(player.getCards())
         player.setCurrentTurn(false);
-        game.cards.splice(0, 1);
-        $("#my-cards").empty();
         populateCards(player.getCards(), "#my-cards");
-        populateUnplayedDeck(game.cards)
+        populateUnplayedDeck(game.deck)
         $("#your-turn").css("display", "none");
         socket.emit("drawCard", {
           ele,
-          card: car,
+          card: c,
           order: player.getOrder(),
           room: player.getCurrentRoom(),
-          newDeck: game.cards,
+          newDeck: game.deck,
           p: p
         });
       }
@@ -838,97 +904,36 @@
       /**
        * GAMEPLAY UI UPDATES
        */
-          //Card Played
-          socket.on('cardPlayed', (data) => {
-            const { ele, index, card, players, order } = data;
-            currentCard = card;
-            player.setCurrentTurn(false);
-            player.setCards(players[order].cards)
-            $("#your-turn").css("display", "none")
-            let other;
-            if(order === 0){
-              other = 1
-            }
-            else{
-              other = 0;
-            }
-
-            $("#my-cards").empty()
-            $("#opponent-cards").empty()
+          socket.on('updateOthersCardPlayed', (data) => {
+            const { ele, index, newCard, players, order } = data;
+            currentCard = newCard;
+            player.setCurrentTurn(true);
+            $("#your-turn").css("display", "inline");
             $("#my-cards").html(populateCards(player.getCards(), "#my-cards"));
-            $("#opponent-cards").html(populateCards(players[other].cards, "#opponent-cards"));
+            $("#opponent-cards").html(populateCards(players[order].cards, "#opponent-cards"));
             $("#last-played").empty()
             populateFirstCard(currentCard);
           });
 
-          socket.on('updateOthersCardPlayed', (data) => {
-            const { ele, index, card, players, order } = data;
-            currentCard = card;
-            player.setCurrentTurn(true);
-            $("#your-turn").css("display", "inline");
-            let other;
-            if(order === 0){
-              other = 1
-            }
-            else{
-              other = 0;
-            }
-            player.setCards(players[other].cards)
-            //("#my-cards").empty();
-            $("#opponent-cards").empty()
-            //$("#my-cards").html(populateCards(player.getCards(), "#my-cards"));
-            $("#opponent-cards").html(populateCards(players[order].cards, "#opponent-cards"));
-            $("#last-played").empty()
-            populateFirstCard(card);
-          });
-
-          // socket.on("drewCard", (data) => {
-          //   const { card, players, order, newDeck } = data;
-          //   player.setCurrentTurn(false);
-          //   //player.setCards(players[order].cards);
-          //   game.setDeck(newDeck)
-          //   $("#your-turn").css("display", "none")
-          //   let other;
-          //   if(order === 0){
-          //     other = 1
-          //   }
-          //   else{
-          //     other = 0;
-          //   }
-
-          //   $("#my-cards").empty()
-          //   $("#opponent-cards").empty()
-          //   $("#my-cards").html(populateCards(player.getCards(), "#my-cards"));
-          //   $("#opponent-cards").html(populateCards(players[other].cards, "#opponent-cards"));
-          //   $("#last-played").empty()
-          //   populateUnplayedDeck(game.deck);
-          //   populateFirstCard(currentCard);
-          // })
+          
 
           socket.on("updateOthersDrewCard", (data) => {
-            const { card, players, order, newDeck } = data;
+            const { card, a, order, newDeck } = data;
             player.setCurrentTurn(true);
             game.setDeck(newDeck)
             $("#your-turn").css("display", "inline");
-            let other;
-            if(order === 0){
-              other = 1
-            }
-            else{
-              other = 0;
-            }
-            //player.setCards(players.cards)
-            $("#my-cards").empty();
-            
             $("#my-cards").html(populateCards(player.getCards(), "#my-cards"));
-            console.log(players.cards)
-            //$("#opponent-cards").empty()
-            //$("#opponent-cards").html(populateCards(players.cards, "#opponent-cards"));
+            $("#opponent-cards").html(populateCards(a, "#opponent-cards"));
             $("#last-played").empty()
             $("#unplayed-cards").empty();
             populateUnplayedDeck(game.deck);
             populateFirstCard(currentCard);
           });
+
+          socket.on('newDeck', (data) => {
+            game.setDeck(data.newDeck);
+            populateUnplayedDeck(game.deck);
+          })
 
 
 
@@ -1005,6 +1010,10 @@
 }());
 
 
+
+
+
+
 /**
        * LEAVE ROOM
        * Update UI after leaving the room
@@ -1030,4 +1039,48 @@
         });
     */
 
-     
+     // socket.on("drewCard", (data) => {
+          //   const { card, players, order, newDeck } = data;
+          //   player.setCurrentTurn(false);
+          //   //player.setCards(players[order].cards);
+          //   game.setDeck(newDeck)
+          //   $("#your-turn").css("display", "none")
+          //   let other;
+          //   if(order === 0){
+          //     other = 1
+          //   }
+          //   else{
+          //     other = 0;
+          //   }
+
+          //   $("#my-cards").empty()
+          //   $("#opponent-cards").empty()
+          //   $("#my-cards").html(populateCards(player.getCards(), "#my-cards"));
+          //   $("#opponent-cards").html(populateCards(players[other].cards, "#opponent-cards"));
+          //   $("#last-played").empty()
+          //   populateUnplayedDeck(game.deck);
+          //   populateFirstCard(currentCard);
+          // })
+
+          //Card Played
+          // socket.on('cardPlayed', (data) => {
+          //   const { ele, index, card, players, order } = data;
+          //   currentCard = card;
+          //   player.setCurrentTurn(false);
+          //   player.setCards(players[order].cards)
+          //   $("#your-turn").css("display", "none")
+          //   let other;
+          //   if(order === 0){
+          //     other = 1
+          //   }
+          //   else{
+          //     other = 0;
+          //   }
+
+          //   $("#my-cards").empty()
+          //   $("#opponent-cards").empty()
+          //   $("#my-cards").html(populateCards(player.getCards(), "#my-cards"));
+          //   $("#opponent-cards").html(populateCards(players[other].cards, "#opponent-cards"));
+          //   $("#last-played").empty()
+          //   populateFirstCard(currentCard);
+          // });

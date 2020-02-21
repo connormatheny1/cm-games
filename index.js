@@ -65,6 +65,12 @@ class Deck {
       }
     }
 
+    replenish(){
+        this.create();
+        this.shuffle();
+        return this.shuffledDeck;
+    }
+
     getShuffledDeck(){
       return this.shuffledDeck;
 
@@ -355,16 +361,17 @@ class Deck {
          */
             //Play card
             socket.on('playCard', (data) => {
-              const { ele, index, card, order, room, p } = data;
+              const { ele, index, newCard, order, room, p } = data;
               players[order].cards.splice(index, 1);
               players[order].currentTurn = false;
-              if(players[order].cards.length === 0){
-                  socket.emit('gameWon', { winner: players[order].username })
+              console.log(newCard)
+              if(players[order].cards.length < 1 && players[order].cards.length >= 0){
+                  //socket.emit('gameWon', { winner: players[order].username })
                   socket.broadcast.to(room).emit('updateOthersGameWon', { winner: players[order].username })
               }
               else{
-                socket.emit('cardPlayed', {ele, index, card, order, players});
-                socket.broadcast.to(room).emit('updateOthersCardPlayed', {ele, index, card, order, players})
+                //socket.emit('cardPlayed', {ele, index, card, order, players});
+                socket.broadcast.to(room).emit('updateOthersCardPlayed', {ele, index, newCard, order, players})
               }
             });
 
@@ -374,9 +381,15 @@ class Deck {
 
                 //players[order].cards.push(card);
                 players[order].currentTurn = false;
-
+                players[order].cards.push(card)
+                let a = players[order]
                 //socket.emit('drewCard', { card, players, order, newDeck })
-                socket.broadcast.to(room).emit('updateOthersDrewCard', { card, players: players[order], order, newDeck })
+                socket.broadcast.to(room).emit('updateOthersDrewCard', { card, a, order, newDeck })
+            });
+
+            socket.on('replenishDeck', (data) => {
+                let newDeck = game.replenish();
+                socket.emit('newDeck', { newDeck })
             })
 
         /**
